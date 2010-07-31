@@ -1,0 +1,281 @@
+#!/usr/bin/perl
+#
+# SelfControl -- Stop internet distractions so you can get some work done.
+#
+use strict;
+use warnings;
+use YAML ();
+
+#
+# if root, apply Config and exit.
+#
+if ($< == 0) {
+  #my $ConfigFile = shift @ARGV;
+  my $ConfigFile = "$ENV{HOME}/.selfcontrol";
+  check_chain();
+  add_chain($ConfigFile);
+  exit;
+}
+
+#
+# not root
+#
+
+my $ConfigFile = "$ENV{HOME}/.selfcontrol";
+my $SU = 'gksudo';
+
+# default config if none exits.
+# hope nobody misses example.com for one hour
+my $Config = { allow => 1, hosts => [qw/example.com/], timeout => 1 };
+
+
+#require Glib;
+#Glib->import(qw/TRUE FALSE/);
+use constant TRUE => 1;
+use constant FALSE => 0;
+
+require Gtk2;
+Gtk2->init;
+
+require Gtk2::SimpleList;
+Gtk2::SimpleList->import;
+
+# $Start set to 1 by clicking 'Start' button, see start().
+my $Start = 0;
+
+load_config();
+build_ui();
+Gtk2->main;
+
+#
+# if 'Start' was clicked, save changes and run self as root
+# to apply the blocks and schedule their removal.
+#
+if ($Start) {
+  save_config();
+  if (scalar @{$Config->{hosts}}) {
+    #system($SU, '-k', '-m', 'SelfControl',  $0);
+    system($SU, '-k', $0);
+  }
+}
+
+exit;
+
+####################################################################
+# Support Routines
+####################################################################
+
+#
+# Manipulate the ConfigFile.
+#
+
+sub load_config {
+  if ( -f $ConfigFile ) {
+    $Config = YAML::LoadFile($ConfigFile);
+  }
+}
+sub save_config {
+  YAML::DumpFile($ConfigFile, $Config);
+}
+
+#
+# Manipulate firewall.
+#
+
+sub check_chain {
+  my $out;
+
+  $out = `iptables -S SelfControl`;
+  unless ($out =~ m/^-N SelfControl\s*$/m) {
+    system("iptables -N SelfControl");
+  }
+
+  $out = `iptables -S OUTPUT`;
+  unless ($out =~ m/^-A OUTPUT -j SelfControl\s*$/m) {
+    system("iptables -A OUTPUT -j SelfControl");
+  }
+}
+sub add_chain {
+  my ($BF) = @_;
+  my ($Config) = YAML::LoadFile($BF);
+
+  my $ts = "now + $Config->{timeout} hours";
+  open my $at, '|-', "at '$ts' 2>/dev/null" or die $!;
+  for my $h (@{$Config->{hosts}}) {
+    system("iptables -I SelfControl -d $h -j DROP");
+    print $at "iptables -D SelfControl -d $h -j DROP\n";
+  }
+  close $at;
+}
+
+#
+# Build the UI.
+#
+
+sub build_ui {
+
+# Tooltip
+  my $tt = Gtk2::Tooltips->new;
+
+# Window
+  my $window = Gtk2::Window->new('toplevel');
+  $window->set_title("SelfControl");
+  $window->set_border_width(10);
+
+  $window->signal_connect(delete_event => \&delete_event);
+  $window->signal_connect(destroy => sub { Gtk2->main_quit; });
+
+# VBox
+  my $box = Gtk2::VBox->new(FALSE, 0);
+
+# Frame
+  my $frame;
+  $frame = Gtk2::Frame->new('Block Method');
+  $frame->add($box);
+
+# RadioButton
+  my $radio;
+  #$radio = Gtk2::RadioButton->new(undef, 'Whitelist');
+  #$radio->set_active(TRUE) if !$Config->{allow};
+  #$radio->signal_connect(toggled => \&set_allow, 0);
+  #$box->pack_start($radio, TRUE, TRUE, 0);
+  #my @group = $radio->get_group;
+
+# RadioButton
+  #$radio = Gtk2::RadioButton->new_with_label(@group, 'Blacklist');
+  $radio = Gtk2::RadioButton->new(undef, 'Blacklist');
+  $radio->signal_connect(toggled => \&set_allow, 1);
+  $radio->set_active(TRUE) if $Config->{allow};
+  $box->pack_start($radio, TRUE, TRUE, 0);
+
+# VBox
+  $box = Gtk2::VBox->new(FALSE, 0);
+  $box->pack_start($frame, TRUE, TRUE, 0);
+
+# Frame
+  $frame = Gtk2::Frame->new('Host List');
+
+# VBox
+  my $vbox;
+  $vbox = Gtk2::VBox->new(FALSE, 0);
+  $frame->add($vbox);
+
+# HBox
+  my $hbox;
+  $hbox = Gtk2::HBox->new(FALSE, 0);
+  $vbox->pack_start($hbox, FALSE, TRUE, 0);
+
+# SimpleList
+  my $list = Gtk2::SimpleList->new('Host'=>'text');
+  $tt->set_tip($list, "Select hosts for deletion.");
+  @{$list->{data}} = @{$Config->{hosts}};
+  #$list->signal_connect(row_activated => sub {
+  #  my ($treeview, $path, $column) = @_;
+  #  print "$list->{data}[$path->to_string][0]\n";
+  #});
+  $list->get_selection->set_mode('multiple');
+
+# ScrolledWindow
+  my $scroll = Gtk2::ScrolledWindow->new;
+  $scroll->set_policy('automatic', 'automatic');
+  $scroll->add($list);
+  $hbox->pack_start($scroll, TRUE, TRUE, 0);
+
+# Button
+  my $button;
+  $button = Gtk2::Button->new("Delete");
+  $tt->set_tip($button, "Delete selected hosts.");
+  $button->signal_connect(clicked => \&del_host, $list);
+my $bb = Gtk2::VButtonBox->new;
+$bb->set_layout_default('start');
+$bb->add($button);
+  $hbox->pack_end($bb, FALSE, FALSE, 0);
+
+# HBox
+  $hbox = Gtk2::HBox->new(FALSE, 0);
+  $vbox->pack_start($hbox, FALSE, TRUE, 0);
+
+  
+# Entry
+  my $entry = Gtk2::Entry->new;
+  $entry->set_width_chars(30);
+  $tt->set_tip($entry, "Enter a hostname.");
+  $hbox->pack_start($entry, TRUE, TRUE, 0);
+
+# Button
+  $button = Gtk2::Button->new("Add");
+  $tt->set_tip($button, "Add host to list.");
+  $button->signal_connect(clicked => \&add_host, [$list, $entry]);
+$bb = Gtk2::HButtonBox->new;
+$bb->set_layout_default('end');
+$bb->add($button);
+  $hbox->pack_start($bb, FALSE, TRUE, 0);
+
+  $box->pack_start($frame, TRUE, TRUE, 0);
+
+# Frame
+  $frame = Gtk2::Frame->new('Block Time (hours)');
+  $box->pack_start($frame, TRUE, TRUE, 0);
+
+# HScale
+  my $scale = Gtk2::HScale->new_with_range(1, 24, 1);
+  $scale->set_draw_value(TRUE);
+  $scale->set_digits(0);
+  $scale->set_value($Config->{timeout});
+  $scale->signal_connect(value_changed => sub {
+    my ($s) = @_;
+    $Config->{timeout} = $s->get_adjustment->value();
+  });
+  #$label->pack_start($scale, TRUE, TRUE, 0);
+  $frame->add($scale);
+
+# Button
+  $button = Gtk2::Button->new("Cancel");
+  $tt->set_tip($button, "Quit without doing anything.");
+  $button->signal_connect(clicked => \&cancel, $window);
+$bb = Gtk2::HButtonBox->new;
+$bb->set_layout_default('edge');
+$bb->add($button);
+  $button = Gtk2::Button->new("Start");
+  $tt->set_tip($button, "Start SelfControl");
+  $button->signal_connect(clicked => \&start, $window);
+$bb->add($button);
+  $box->pack_start($bb, TRUE, TRUE, 0);
+
+# Show
+  $window->add($box);
+  $window->show_all;
+}
+sub set_allow {
+  my ($widget, $bw) = @_;
+  $Config->{allow} = $bw; 
+}
+sub start {
+  my ($widget, $window) = @_;
+  #print "starting!\n";
+  $Start = 1;
+  $window->destroy;
+}
+sub cancel {
+  my ($widget, $window) = @_;
+  $window->destroy;
+}
+sub del_host {
+  my ($widget, $list) = @_;
+  my (@sel) = $list->get_selected_indices;
+  for my $s (@sel) {
+    splice @{$list->{data}}, $s, 1;
+    splice @{$Config->{hosts}}, $s, 1;
+  }
+}
+sub add_host {
+  my ($widget, $d) = @_;
+  my ($list, $entry) = @{$d};
+  push @{$list->{data}}, $entry->get_text; 
+  push @{$Config->{hosts}}, $entry->get_text;
+  $entry->set_text('');
+}
+sub delete_event {
+  #print "delete event\n";
+  return FALSE;
+}
