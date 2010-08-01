@@ -26,7 +26,7 @@ my $SU = 'gksudo';
 
 # default config if none exits.
 # hope nobody misses example.com for one hour
-my $Config = { allow => 1, hosts => [qw/example.com/], timeout => 1 };
+my $Config = { allow => 1, hosts => [[qw/example.com 192.0.32.10/]], timeout => 1 };
 
 
 #require Glib;
@@ -101,7 +101,8 @@ sub add_chain {
 
   my $ts = "now + $Config->{timeout} hours";
   open my $at, '|-', "at '$ts' 2>/dev/null" or die $!;
-  for my $h (@{$Config->{hosts}}) {
+  for my $hr (@{$Config->{hosts}}) {
+    my $h = $hr->[1];
     system("iptables -I SelfControl -d $h -j DROP");
     print $at "iptables -D SelfControl -d $h -j DROP\n";
   }
@@ -166,13 +167,10 @@ sub build_ui {
   $vbox->pack_start($hbox, FALSE, TRUE, 0);
 
 # SimpleList
-  my $list = Gtk2::SimpleList->new('Host'=>'text');
+  my $list = Gtk2::SimpleList->new('Host'=>'text', 'IP'=>'text');
   $tt->set_tip($list, "Select hosts for deletion.");
   @{$list->{data}} = @{$Config->{hosts}};
   #$list->signal_connect(row_activated => sub {
-  #  my ($treeview, $path, $column) = @_;
-  #  print "$list->{data}[$path->to_string][0]\n";
-  #});
   $list->get_selection->set_mode('multiple');
 
 # ScrolledWindow
@@ -199,7 +197,8 @@ $bb->add($button);
 # Entry
   my $entry = Gtk2::Entry->new;
   $entry->set_width_chars(30);
-  $tt->set_tip($entry, "Enter a hostname.");
+  $tt->set_tip($entry, "Enter a hostname or IP.");
+  $entry->signal_connect(activate => \&add_host, [$list, $entry]);
   $hbox->pack_start($entry, TRUE, TRUE, 0);
 
 # Button
@@ -271,10 +270,37 @@ sub del_host {
 sub add_host {
   my ($widget, $d) = @_;
   my ($list, $entry) = @{$d};
-  push @{$list->{data}}, $entry->get_text; 
-  push @{$Config->{hosts}}, $entry->get_text;
+  return unless length $entry->get_text;
+  my (@info) = host2name_ip($entry->get_text);
+  return unless @info;
+  my @data = sort {$a->[0] cmp $b->[0]} @{$Config->{hosts}},[@info];
+  $Config->{hosts} = [@data];
+  $list->set_data_array($Config->{hosts});
   $entry->set_text('');
 }
+sub host2name_ip {
+  use Socket;
+
+  my $host = shift;
+
+  # Get an IP address.
+  my $packed = gethostbyname($host);
+
+  # Lookup failed?
+  return if not defined $packed; 
+
+  my $ip = inet_ntoa($packed);
+  if ( $host eq $ip ) {
+  # Was given IP, return reverse lookup or IP as name.
+    my $name = gethostbyaddr($packed,AF_INET);
+    $name = $ip unless defined $name;
+    return ($name, $ip);
+  }
+  else {
+  # Was given hostname, return it.
+    return ($host, $ip);
+  }
+} 
 sub delete_event {
   #print "delete event\n";
   return FALSE;
