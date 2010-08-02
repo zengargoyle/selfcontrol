@@ -1,0 +1,42 @@
+Overview
+--------
+
+Task: Block access internet sites for a given period of time.
+
+Blocking is done via iptables, a custom chain is added to the the
+default OUTPUT chain, blocks are added to the custom chain.
+
+iptables -N SelfControl
+iptables -A OUTPUT -j SelfControl
+
+iptables -A SelfControl -d example.com -j DROP
+...
+
+Unblocking is done by removing entries from the custom chain.
+
+iptables -D SelfControl -d example.com -j DROP
+...
+
+Scheduling the unblocks is done via the 'at' command.
+
+cat << _EOF_ | at now + 1 min
+iptables -D SelfControl -d example.com -j DROP
+...
+_EOF_
+
+That's it.  Simple.  There is a function that checks for the existance
+of the custom chain setup and creates it if needed.  And another function
+that takes a list of IP addresses and a timeout value, adds the blocks
+and schedules the job to remove the blocks in the future.
+
+The program does a check when starting, if run as an ordinary user, it
+presents the GUI for managing the list of IPs and the timeout.  If the
+'Start' button is clicked, the configuration is saved and the program
+re-runs itself with root priviledges.
+
+When run with root priviledges, the program reads the configuration,
+applies the blocks and schedules the unblocks.
+
+if root, load config, check chain, apply blocks, schedule unblocks.
+if user, load config, run GUI, 'Cancel' or 'Start', if 'Start', save
+config, run as root, if 'Cancel' do nothing and exit.

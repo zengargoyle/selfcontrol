@@ -1,0 +1,25 @@
+TODO
+----
+
+Split one-big-script into a few modules.
+
+Possibly add HTTP Proxy server so blocked access attemps can be
+intercepted and the user can be chided.
+
+Add Whitelist via the proxy server allowing access to sites based
+on application level information.  For example also allow sites that
+are referenced by whitelisted sites by checking the Referer information.
+
+Better checking the state of the standard firewall chains.  Currently
+the program assumes a default empty set of chains with the policy
+ACCEPT.  This will likely be difficult once you get into REJECT policies
+and allowing established, nat rules, and other pre-existing restrictive
+rules.  However, it may not be needed at all, a user with such rules
+would not need this program to simply block and unblock sites.  DUH!
+
+Possible split lines for the script:
+
+Server - the proxy
+Root - for the root stuff
+UI - for the GUI
+Config - for the configuration state
