@@ -1,0 +1,10 @@
+
+Mon Aug  2 11:44:16 UTC 2010
+----------------------------
+
+Looking better for a good whitelist functionality.  Found and tested
+a bit of the HTTP::Proxy module for a forced server.  And found out
+iptables module ipt_owner which allows rules to match based on the
+owner of the socket connecting.  This should be enough to block the
+user without interfering with system functions (DHCP/NTP).  So we
+can DNAT to a local proxy server running as root.
