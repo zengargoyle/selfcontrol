@@ -1,125 +1,55 @@
-SelfControl-1.0rc1 -- The Linux port.
+SelfControl
 
-This came about after a post to Ask MetaFilter requesting a Ubuntu
-version of the Mac OS X program 'SelfControl' by Steve Lambert.
+The README is used to introduce the module and provide instructions on
+how to install the module, any machine dependencies it may have (for
+example C compilers and installed libraries) and any other information
+that should be provided before the module is installed.
 
-The Ask MetaFilter Thread:
-http://ask.metafilter.com/160649/Block-internet-on-ubuntu#commentpreview
-
-The SelfControl page of Steve Lambert:
-http://visitsteve.com/work/selfcontrol
-
-The source for the Mac OS X version:
-http://github.com/slambert/selfcontrol
-
-From what I gathered from a quick look at the source and comments, the
-purpose of the program is to block access to certain web sites (Blacklist)
-for a period of time with no easy way to unblock access.
-(SPOILER: It's always possible to get around something if you try hard
-enough, but we can make it not easy.)
+A README file is required for CPAN modules since CPAN extracts the README
+file from a module distribution so that people browsing the archive
+can use it to get an idea of the module's uses. It is usually a good idea
+to provide version information here so that people can decide whether
+fixes for the module are worth downloading.
 
 
-THIS IS A BETA RELEASE
+INSTALLATION
 
-This version for Linux systems uses the Perl language (should be installed
-on any modern distribution), some Perl modules (YAML, Gtk2) which may be
-installed via the Comprehensive Perl Archive Network (CPAN) or may be
-available as installable packages via your distributions standard package
-management utilities.  For example on Ubuntu (and Debian most likely) they
-are libgtk2-perl and libyaml-perl and can be installed with the Synaptic
-Package Manager, or with the apt-get command line tool.
+To install this module, run the following commands:
 
-Also required but probably installed on most distributions are the IPTables
-firewall modules and tools (iptables) and the 'at' scheduling command.
+	perl Build.PL
+	./Build
+	./Build test
+	./Build install
 
-IIRC on my Ubuntu I just had to install the YAML Perl module, everything
-else was already available. YMMV.
+SUPPORT AND DOCUMENTATION
 
-Installation
-------------
+After installing, you can find documentation for this module with the
+perldoc command.
 
-Download the SelfControl script:
-http://svn.jklmnop.net/proj/SelfControl/tags/release-1.0rc1/SelfControl
+    perldoc SelfControl
 
-Move the script to /usr/bin or somewhere in your PATH.
-Make sure it has execute permissions.
-Run the program.  Either by using Alt-F2 or adding an Application Launcher
-to your Panel, or from the command line.
+You can also look for information at:
 
-See the Diagnostics section below before you try to run the program the
-first time if you wish to check things out.
+    RT, CPAN's request tracker
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=SelfControl
 
-Usage
------
+    AnnoCPAN, Annotated CPAN documentation
+        http://annocpan.org/dist/SelfControl
 
-When run, you will see a window with:
-* A radio button that you can't change. (coming soon maybe)
-* A list of hosts to block, pre-populated with 'www.example.com'.
-* A Delete button which will delete the selected hosts from the list.
-  It will *not* unblock them, just keep them from getting blocked for
-  longer, and prevent them from showing up by default the next time the
-  program is run.
-* A text entry box with an Add button. To add a new host to block, enter
-  the hostname in the box and click the Add button. Repeat as necessary.
-* A slider that lets you set the number of *hours* you wish to block access
-  to the listed hosts for.
-* A Cancel button.  Click this and the program will exit without doing
-  anything. You can also click the close window button to achieve the
-  same effect.
-* A Start button. Click this and you will be prompted for your password.
-  Once entered, the hosts you listed will be blocked for the time you
-  specified and the window will go away.
+    CPAN Ratings
+        http://cpanratings.perl.org/d/SelfControl
+
+    Search CPAN
+        http://search.cpan.org/dist/SelfControl/
 
 
-Diagnostics
------------
+LICENSE AND COPYRIGHT
 
-Before you start, you may want to check out your current firewall setup
-to make sure you have it installed and working.  Open a terminal and
-use 'iptables --list' to make sure things look like this:
+Copyright (C) 2010 zengargoyle
 
-  $ gksudo iptables --list
-  Chain INPUT (policy ACCEPT)
-  target     prot opt source               destination         
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
 
-  Chain FORWARD (policy ACCEPT)
-  target     prot opt source               destination         
+See http://dev.perl.org/licenses/ for more information.
 
-  Chain OUTPUT (policy ACCEPT)
-  target     prot opt source               destination         
-
-If they don't, this program may not work for you.  Let me know what you
-see and I'll try and add functionality to handle it.  You might see something
-different if you already have firewalls installed and operating.
-
-Once you run the program once, you should see something like this:
-
-  $ gksudo iptables --list
-  Chain INPUT (policy ACCEPT)
-  target     prot opt source               destination         
-
-  Chain FORWARD (policy ACCEPT)
-  target     prot opt source               destination         
-
-  Chain OUTPUT (policy ACCEPT)
-  target     prot opt source               destination         
-  SelfControl  all  --  anywhere             anywhere            
-
-  Chain SelfControl (1 references)
-  target     prot opt source               destination         
-  DROP       all  --  anywhere             www.example.com     
-
-Note the SelfControl references.
-Then try this:
-
-$ gksudo atq
- 64 Fri Jul 30 21:02:00 2010 a root
-
-You should see a date in the future when your blocks will be unblocked.
-
-
-DON'T READ THIS
----------------
-
-Should things go horrible wrong... see:
-http://svn.jklmnop.net/proj/SelfControl/tags/release-1.0rc1/DONT_README
