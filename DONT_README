@@ -2,8 +2,8 @@ See, I told you not to look.
 
 Open a Terminal
 
-  $ gksudo iptables -D OUTPUT -j SelfControl
-  $ gksudo iptables -F SelfControl
-  $ gksudo iptables -X SelfControl
+  $ sudo iptables -D OUTPUT -j SelfControl
+  $ sudo iptables -F SelfControl
+  $ sudo iptables -X SelfControl
 
 The 'at' jobs will just run anyway and fail.
