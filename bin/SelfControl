@@ -7,11 +7,19 @@ use warnings;
 use YAML ();
 
 #
+# Get config from $ENV{HOME} of calling user.  Some trickery
+# involved since %ENV is cleared by sudo for security reasons.
+# Get from passwd by uid.
+#
+my $UID = $<;
+$UID = $ENV{SUDO_UID} if exists $ENV{SUDO_UID};
+my $HOME = (getpwuid($UID))[7];
+my $ConfigFile = "$HOME/.selfcontrol";
+
+#
 # if root, apply Config and exit.
 #
 if ($< == 0) {
-  #my $ConfigFile = shift @ARGV;
-  my $ConfigFile = "$ENV{HOME}/.selfcontrol";
   check_chain();
   add_chain($ConfigFile);
   add_hosts($ConfigFile);
@@ -22,16 +30,31 @@ if ($< == 0) {
 # not root
 #
 
-my $ConfigFile = "$ENV{HOME}/.selfcontrol";
-my $SU = 'gksudo';
+my @SUDO;
+@SUDO = (gksudo => '-D' => 'Self Control');  # XXX annoying if testing.
+
+=for comment - future non-gui interface.
+
+if (-t STDIN) {
+  @SUDO = (sudo => '-p' => "Enter your password to perform administrative tasks.\nThe application 'This Program' lets you modify essential parts of your system.\nEnter Password:");
+}
+else {
+  @SUDO = (gksudo => '-D' => 'This Program');
+}
+
+=cut
 
 # default config if none exits.
 # hope nobody misses example.com for one hour
-my $Config = { allow => 1, hosts => [[qw/example.com 192.0.32.10/]], timeout => 1 };
-
+my $Config = {
+  version => 1,
+  allow => 1,
+  hosts => [[qw<example.com 192.0.32.10>]],
+  timeout => 5,
+};
 
 #require Glib;
-#Glib->import(qw/TRUE FALSE/);
+#Glib->import(qw<TRUE FALSE>);
 use constant TRUE => 1;
 use constant FALSE => 0;
 
@@ -44,7 +67,7 @@ Gtk2::SimpleList->import;
 # $Start set to 1 by clicking 'Start' button, see start().
 my $Start = 0;
 
-load_config();
+$Config = load_config($ConfigFile, $Config);
 build_ui();
 Gtk2->main;
 
@@ -53,10 +76,9 @@ Gtk2->main;
 # to apply the blocks and schedule their removal.
 #
 if ($Start) {
-  save_config();
+  save_config($ConfigFile, $Config);
   if (scalar @{$Config->{hosts}}) {
-    #system($SU, '-k', '-m', 'SelfControl',  $0);
-    system($SU, '-k', $0);
+    system(@SUDO, $0);
   }
 }
 
@@ -71,11 +93,20 @@ exit;
 #
 
 sub load_config {
+  my ($ConfigFile, $Config) = @_;
   if ( -f $ConfigFile ) {
     $Config = YAML::LoadFile($ConfigFile);
+    if (exists $Config->{version}) {
+    }
+    else {
+      $Config->{timeout} *= 60;  # pre 'version' in hours, convert to minutes.
+      $Config->{version} = 1;
+    }
   }
+  return $Config;
 }
 sub save_config {
+  my ($ConfigFile, $Config) = @_;
   YAML::DumpFile($ConfigFile, $Config);
 }
 
@@ -97,10 +128,13 @@ sub check_chain {
   }
 }
 sub add_chain {
-  my ($BF) = @_;
-  my ($Config) = YAML::LoadFile($BF);
+  my ($ConfigFile) = @_;
+  unless (-f $ConfigFile) {
+    die "No Config File found: '$ConfigFile'\n";
+  }
+  my ($Config) = load_config($ConfigFile);
 
-  my $ts = "now + $Config->{timeout} hours";
+  my $ts = "now + $Config->{timeout} minutes";
   open my $at, '|-', "at '$ts' 2>/dev/null" or die $!;
   for my $hr (@{$Config->{hosts}}) {
     my $h = $hr->[1];
@@ -110,9 +144,12 @@ sub add_chain {
   close $at;
 }
 sub add_hosts {
-  my ($BF) = @_;
-  my ($Config) = YAML::LoadFile($BF);
-  my $ts = "now + $Config->{timeout} hours";
+  my ($ConfigFile) = @_;
+  unless (-f $ConfigFile) {
+    die "No Config File found: '$ConfigFile'\n";
+  }
+  my ($Config) = load_config($ConfigFile);
+  my $ts = "now + $Config->{timeout} minutes";
   my @hn;
   for my $hr (@{$Config->{hosts}}) {
     my $h = $hr->[0];
@@ -195,8 +232,7 @@ sub build_ui {
 # SimpleList
   my $list = Gtk2::SimpleList->new('Host'=>'text', 'IP'=>'text');
   $tt->set_tip($list, "Select hosts for deletion.");
-  @{$list->{data}} = @{$Config->{hosts}};
-  #$list->signal_connect(row_activated => sub {
+  $list->set_data_array($Config->{hosts});
   $list->get_selection->set_mode('multiple');
 
 # ScrolledWindow
@@ -239,20 +275,44 @@ $bb->add($button);
   $box->pack_start($frame, TRUE, TRUE, 0);
 
 # Frame
-  $frame = Gtk2::Frame->new('Block Time (hours)');
+  $frame = Gtk2::Frame->new('Block Time');
   $box->pack_start($frame, TRUE, TRUE, 0);
 
-# HScale
-  my $scale = Gtk2::HScale->new_with_range(1, 24, 1);
-  $scale->set_draw_value(TRUE);
+{
+  my $vbox = Gtk2::VBox->new(0,0);
+
+  my $scale = Gtk2::HScale->new_with_range(5, (24*60), 5);
+  $Config->{timeout} = 5 if $Config->{timeout} < 5;
   $scale->set_digits(0);
-  $scale->set_value($Config->{timeout});
+  $scale->set_draw_value(0);
+  my $label = Gtk2::Label->new('');
+  $scale->set_value(update_time($label, $Config->{timeout}));
+
+  sub update_time {
+    my ($l,$t) = @_;
+    $t = int($t/5)*5;
+    my ($h,$m) = (int($t/60), $t%60);
+    my $text;
+    $text .= "$h hour" if $h > 0;
+    $text .= "s"       if $h > 1;
+    $text .= " $m minute" if $m > 0;
+    $text .= "s"          if $m > 1;
+    $l->set_text($text);
+    return $t;
+  }
+
   $scale->signal_connect(value_changed => sub {
     my ($s) = @_;
-    $Config->{timeout} = $s->get_adjustment->value();
-  });
-  #$label->pack_start($scale, TRUE, TRUE, 0);
-  $frame->add($scale);
+    my $t = $s->get_adjustment->value;
+    $Config->{timeout} = update_time($label, $t);
+    $s->set_value($Config->{timeout});
+    }
+  );
+
+  $vbox->pack_start($scale, 0,0,0);
+  $vbox->pack_start($label, 0,0,0);
+  $frame->add($vbox);
+}
 
 # Button
   $button = Gtk2::Button->new("Cancel");
@@ -277,7 +337,6 @@ sub set_allow {
 }
 sub start {
   my ($widget, $window) = @_;
-  #print "starting!\n";
   $Start = 1;
   $window->destroy;
 }
@@ -299,7 +358,7 @@ sub add_host {
   return unless length $entry->get_text;
   my (@info) = host2name_ip($entry->get_text);
   return unless @info;
-  my @data = sort {$a->[0] cmp $b->[0]} @{$Config->{hosts}},[@info];
+  my @data = sort {$a->[0] cmp $b->[0]} @{$Config->{hosts}}, [@info];
   $Config->{hosts} = [@data];
   $list->set_data_array($Config->{hosts});
   $entry->set_text('');
@@ -328,6 +387,5 @@ sub host2name_ip {
   }
 } 
 sub delete_event {
-  #print "delete event\n";
   return FALSE;
 }
