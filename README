@@ -1,5 +1,10 @@
 SelfControl
 
+At the moment, SelfControl is a single script (found in bin/SelfControl),
+so if you like quick and easy, you can just download it and run it.
+
+MODULE README
+
 The README is used to introduce the module and provide instructions on
 how to install the module, any machine dependencies it may have (for
 example C compilers and installed libraries) and any other information
