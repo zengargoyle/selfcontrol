@@ -3,6 +3,15 @@ Overview
 
 Task: Block access internet sites for a given period of time.
 
+Two Methods
+===========
+
+* iptables firewall
+* /etc/hosts DNS resover hijacking
+
+iptables firewall
+=================
+
 Blocking is done via iptables, a custom chain is added to the the
 default OUTPUT chain, blocks are added to the custom chain.
 
@@ -40,3 +49,28 @@ applies the blocks and schedules the unblocks.
 if root, load config, check chain, apply blocks, schedule unblocks.
 if user, load config, run GUI, 'Cancel' or 'Start', if 'Start', save
 config, run as root, if 'Cancel' do nothing and exit.
+
+
+/etc/hosts DNS resover hijacking
+================================
+
+Another method has been added, hostnames (example.com) are added
+to /etc/hosts as 127.0.0.2 addresses.
+
+Upon blocking an entry like this is added to /etc/hosts:
+
+127.0.0.2 example.com # SelfControl - DO NOT EDIT!
+...
+
+After the timeout, the entry is removed through an 'at' job using
+the almost ever present 'ed' editor.
+
+ed /etc/hosts <<_EOF_ 2>/dev/null
+/^127\.0\.0\.2 example\.com # SelfControl - DO NOT EDIT!$/d
+...
+wq
+_EOF_
+
+So, just another simple 'modify system' and 'schedule undoing via "at"'
+solution for now at least.
+

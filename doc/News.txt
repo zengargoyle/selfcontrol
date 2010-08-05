@@ -1,4 +1,21 @@
 
+Thu Aug  5 08:30:48 UTC 2010
+----------------------------
+
+Added a rough /etc/hosts file hijack.  Hosts given as a name (example.com)
+instead of just an IP are added to the hosts file at 127.0.0.2.  That
+address is chosen to not interfere with any real servers running on the
+usual 127.0.0.1 (localhost) address.  Future plans will probably match
+on the address via iptables rules to redirect to a localhost:8888 or
+something web proxy for whitelist and/or just nagging the user who
+tries anyway.
+
+This should help a bit with hosts that change DNS info often either
+round-robin or dynamic.  iptables can't do this as it's in the
+application layer vs the network layer.
+
+Thanks to Eric Kow for the request.
+
 Mon Aug  2 11:44:16 UTC 2010
 ----------------------------
 
