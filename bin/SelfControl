@@ -14,6 +14,7 @@ if ($< == 0) {
   my $ConfigFile = "$ENV{HOME}/.selfcontrol";
   check_chain();
   add_chain($ConfigFile);
+  add_hosts($ConfigFile);
   exit;
 }
 
@@ -107,6 +108,31 @@ sub add_chain {
     print $at "iptables -D SelfControl -d $h -j DROP\n";
   }
   close $at;
+}
+sub add_hosts {
+  my ($BF) = @_;
+  my ($Config) = YAML::LoadFile($BF);
+  my $ts = "now + $Config->{timeout} hours";
+  my @hn;
+  for my $hr (@{$Config->{hosts}}) {
+    my $h = $hr->[0];
+    next if $h =~ /\.\d{1,3}$/;  # purge any IP only.
+    push @hn, $h;
+  }
+  if (@hn) {
+    open my $at, '|-', "at '$ts' 2>/dev/null" or die $!;
+    open my $hf, '>>', '/etc/hosts' or die $!;
+    print $at "ed /etc/hosts <<_EOF_ 2>/dev/null\n";
+    for (@hn) {
+      my $esc = $_;
+      $esc =~ s/\./\\./g;
+      print $hf "127.0.0.2 $_ # SelfControl - DO NOT EDIT!\n";
+      print $at "/^127\\.0\\.0\\.2 $esc # SelfControl - DO NOT EDIT!\$/d\n";
+    }
+    close $hf;
+    print $at "wq\n_EOF_\n";
+    close $at;
+  }
 }
 
 #
