@@ -1,4 +1,13 @@
 
+Thu Aug  5 12:03:10 UTC 2010
+----------------------------
+
+Updated config file version (automatic upgrade of old versions).
+Changed config file location detection to avoid having to use
+preserve environment on sudo (security sanity).
+Block time now in hours/minutes (5 minute interval), slider gives
+pretty value display.
+
 Thu Aug  5 08:30:48 UTC 2010
 ----------------------------
 
