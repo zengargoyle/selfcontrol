@@ -6,4 +6,7 @@ Open a Terminal
   $ sudo iptables -F SelfControl
   $ sudo iptables -X SelfControl
 
+  $ sudo $EDITOR /etc/hosts
+  # Remove '# SelfControl - DO NOT EDIT!' entries.
+
 The 'at' jobs will just run anyway and fail.
