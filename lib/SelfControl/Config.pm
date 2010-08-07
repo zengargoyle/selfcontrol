@@ -3,6 +3,9 @@ package SelfControl::Config;
 use warnings;
 use strict;
 
+use Exporter qw<import>;
+our @EXPORT = qw<load_config save_config>;
+
 =head1 NAME
 
 SelfControl::Config - The great new SelfControl::Config!
@@ -38,7 +41,26 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =cut
 
-sub function1 {
+#
+# Manipulate the ConfigFile.
+#
+
+sub load_config {
+  my ($ConfigFile, $Config) = @_;
+  if ( -f $ConfigFile ) {
+    $Config = YAML::LoadFile($ConfigFile);
+    if (exists $Config->{version}) {
+    }
+    else {
+      $Config->{timeout} *= 60;  # pre 'version' in hours, convert to minutes.
+      $Config->{version} = 1;
+    }
+  }
+  return $Config;
+}
+sub save_config {
+  my ($ConfigFile, $Config) = @_;
+  YAML::DumpFile($ConfigFile, $Config);
 }
 
 =head2 function2

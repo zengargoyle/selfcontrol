@@ -4,8 +4,13 @@
 #
 use strict;
 use warnings;
+use Sys::Syslog;
 use YAML ();
+use SelfControl;
+use SelfControl::Config;
+use SelfControl::Root;
 
+openlog('SelfControl','pid','local0');
 #
 # Get config from $ENV{HOME} of calling user.  Some trickery
 # involved since %ENV is cleared by sudo for security reasons.
@@ -20,12 +25,16 @@ my $ConfigFile = "$HOME/.selfcontrol";
 # if root, apply Config and exit.
 #
 if ($< == 0) {
+  syslog('info','starting root');
   check_chain();
   add_chain($ConfigFile);
   add_hosts($ConfigFile);
+  syslog('info','finished root');
+  closelog;
   exit;
 }
 
+syslog('info','starting user');
 #
 # not root
 #
@@ -73,92 +82,6 @@ if ($UI->{started}) {
   }
 }
 
+syslog('info','finished user');
+closelog;
 exit;
-
-####################################################################
-# Support Routines
-####################################################################
-
-#
-# Manipulate the ConfigFile.
-#
-
-sub load_config {
-  my ($ConfigFile, $Config) = @_;
-  if ( -f $ConfigFile ) {
-    $Config = YAML::LoadFile($ConfigFile);
-    if (exists $Config->{version}) {
-    }
-    else {
-      $Config->{timeout} *= 60;  # pre 'version' in hours, convert to minutes.
-      $Config->{version} = 1;
-    }
-  }
-  return $Config;
-}
-sub save_config {
-  my ($ConfigFile, $Config) = @_;
-  YAML::DumpFile($ConfigFile, $Config);
-}
-
-#
-# Manipulate firewall.
-#
-
-sub check_chain {
-  my $out;
-
-  $out = `iptables -S SelfControl`;
-  unless ($out =~ m/^-N SelfControl\s*$/m) {
-    system("iptables -N SelfControl");
-  }
-
-  $out = `iptables -S OUTPUT`;
-  unless ($out =~ m/^-A OUTPUT -j SelfControl\s*$/m) {
-    system("iptables -A OUTPUT -j SelfControl");
-  }
-}
-sub add_chain {
-  my ($ConfigFile) = @_;
-  unless (-f $ConfigFile) {
-    die "No Config File found: '$ConfigFile'\n";
-  }
-  my ($Config) = load_config($ConfigFile);
-
-  my $ts = "now + $Config->{timeout} minutes";
-  open my $at, '|-', "at '$ts' 2>/dev/null" or die $!;
-  for my $hr (@{$Config->{hosts}}) {
-    my $h = $hr->[1];
-    system("iptables -I SelfControl -d $h -j DROP");
-    print $at "iptables -D SelfControl -d $h -j DROP\n";
-  }
-  close $at;
-}
-sub add_hosts {
-  my ($ConfigFile) = @_;
-  unless (-f $ConfigFile) {
-    die "No Config File found: '$ConfigFile'\n";
-  }
-  my ($Config) = load_config($ConfigFile);
-  my $ts = "now + $Config->{timeout} minutes";
-  my @hn;
-  for my $hr (@{$Config->{hosts}}) {
-    my $h = $hr->[0];
-    next if $h =~ /\.\d{1,3}$/;  # purge any IP only.
-    push @hn, $h;
-  }
-  if (@hn) {
-    open my $at, '|-', "at '$ts' 2>/dev/null" or die $!;
-    open my $hf, '>>', '/etc/hosts' or die $!;
-    print $at "ed /etc/hosts <<_EOF_ 2>/dev/null\n";
-    for (@hn) {
-      my $esc = $_;
-      $esc =~ s/\./\\./g;
-      print $hf "127.0.0.2 $_ # SelfControl - DO NOT EDIT!\n";
-      print $at "/^127\\.0\\.0\\.2 $esc # SelfControl - DO NOT EDIT!\$/d\n";
-    }
-    close $hf;
-    print $at "wq\n_EOF_\n";
-    close $at;
-  }
-}

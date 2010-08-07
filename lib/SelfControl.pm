@@ -38,6 +38,67 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =cut
 
+sub get_active {
+use YAML qw<Dump>;
+  my ($config) = @_;
+  my $queue = get_queue();
+  my $jobs = $config->{jobs};
+
+  # delete completed jobs;
+  for my $id (keys %{$jobs}) {
+    delete $jobs->{$id} unless exists $queue->{$id}
+  }
+
+  # hash of host,ip = date; order of dates uniq
+  # latest date wins
+  my %last;
+  my @order;
+  for my $id (sort {$a <=> $b} keys %{$jobs}) {
+    my $job = $jobs->{$id};
+    my $date = shift @{$job};
+    for my $entry (@{$job}) {
+      $last{$entry->[1]}{$entry->[0]} = $date;
+      push @order, $date unless grep {$date eq $_} @order;
+    }
+  }
+
+  # build [date, [host, ip]] in date,host order
+  my @sorted;
+  for my $date (@order) {
+    my @keep = ();
+    for my $host (keys %last) {
+      for my $ip (keys %{$last{$host}}) {
+        push @keep, [$host, $ip] if $last{$host}{$ip} eq $date;
+      }
+    }
+    push @sorted, [$date, [sort {$a->[0] cmp $b->[0]} @keep]] if @keep;
+  }
+  return \@sorted;
+}
+sub get_queue {
+  my @lines = `sudo atq`;
+  chomp @lines;
+
+  my %data;
+  for (@lines) {
+    next unless m/
+      ^
+      (\d+)                                     # job id
+      \t
+      (... \s ... \s .. \s ..:..:.. \s ....)    # date
+      \s
+      (\w)                                      # queue name
+      \s
+      (\w+)                                     # job owner
+      $
+    /x;
+
+    next unless $3 eq 'a';
+    next unless $4 eq 'root';
+    $data{$1} = $2;
+  }
+  return \%data;
+}
 sub function1 {
 }
 

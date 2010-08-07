@@ -85,6 +85,7 @@ sub run {
   my ($self) = @_;
   require Gtk2;
   require Gtk2::SimpleList;
+  require Gtk2::SimpleMenu;
   Gtk2->init;
   $self->build_ui;
   Gtk2->main;
@@ -139,9 +140,51 @@ See http://dev.perl.org/licenses/ for more information.
 #
 # Build the UI.
 #
+sub menu {
+  my ($self) = @_;
+  my $mt = [
+    _Application => {
+      item_type => '<Branch>',
+      children => [
+        _Start => {
+          callback => sub { $self->start; },
+          accelerator => '<ctrl>S',
+        },
+        _Quit => {
+          callback => sub { $self->cancel; },
+          accelerator => '<ctrl>Q',
+        },
+      ],
+    },
+    _View => {
+      item_type => '<Branch>',
+      children => [
+        '_Active Blocks' => {
+          callback => sub { $self->view_active; },
+        },
+      ],
+    },
+    _Help => {
+      item_type => '<Branch>',
+      children => [
+        _About => {
+          callback => sub { $self->about; },
+        },
+      ],
+    },
+  ];
+  my $menu = Gtk2::SimpleMenu->new(
+    menu_tree => $mt,
+  );
+  return $menu;
+}
+
+sub view_active {}
 
 sub build_ui {
   my ($self) = @_;
+
+  $self->{menu} = $self->menu;
 
 # Tooltip
   my $tt = Gtk2::Tooltips->new;
@@ -151,7 +194,7 @@ sub build_ui {
   $self->{main_window} = $window;
 
   $window->set_title("SelfControl");
-  $window->set_border_width(10);
+  $window->set_border_width(0);
 
   $window->signal_connect(delete_event => sub { FALSE; });
   $window->signal_connect(destroy => sub { Gtk2->main_quit; });
@@ -181,6 +224,7 @@ sub build_ui {
 
 # VBox
   $box = Gtk2::VBox->new(FALSE, 0);
+  $box->pack_start($self->{menu}->{widget}, TRUE, TRUE, 0);
   $box->pack_start($frame, TRUE, TRUE, 0);
 
 # Frame
@@ -274,11 +318,6 @@ $bb->add($button);
 # Button
 $bb = Gtk2::HButtonBox->new;
 $bb->set_layout_default('edge');
-  $button = Gtk2::Button->new("About");
-  $tt->set_tip($button, "Show application information.");
-  $button->signal_connect(clicked => sub { $self->about; });
-$bb->add($button);
-
   $button = Gtk2::Button->new("Cancel");
   $tt->set_tip($button, "Quit without doing anything.");
   $button->signal_connect(clicked => sub { $self->cancel; });
