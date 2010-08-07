@@ -1,4 +1,14 @@
 
+Sat Aug  7 07:57:54 UTC 2010
+----------------------------
+
+Factored GUI stuff into SelfControl::UI.
+Got build to install icons and desktop file. Still will need to run
+'desktop-file-install /usr/share/applications/selfcontrol.desktop' manually
+to get it added to the Applications->Internet menu.
+You can no longer just copy the main script to upgrade, modules do things
+now.
+
 Thu Aug  5 12:03:10 UTC 2010
 ----------------------------
 
