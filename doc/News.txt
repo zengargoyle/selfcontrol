@@ -1,4 +1,13 @@
 
+Sat Aug  7 20:48:17 UTC 2010
+----------------------------
+
+Factoring continues into Root, Config, SelfControl
+Add syslogging
+Add menus
+Add about
+Add viewing active blocks (almost)
+
 Sat Aug  7 07:57:54 UTC 2010
 ----------------------------
 
