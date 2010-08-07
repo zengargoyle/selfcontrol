@@ -1,4 +1,5 @@
 package SelfControl::UI;
+use SelfControl;
 
 use warnings;
 use strict;
@@ -271,11 +272,16 @@ $bb->add($button);
 }
 
 # Button
+$bb = Gtk2::HButtonBox->new;
+$bb->set_layout_default('edge');
+  $button = Gtk2::Button->new("About");
+  $tt->set_tip($button, "Show application information.");
+  $button->signal_connect(clicked => sub { $self->about; });
+$bb->add($button);
+
   $button = Gtk2::Button->new("Cancel");
   $tt->set_tip($button, "Quit without doing anything.");
   $button->signal_connect(clicked => sub { $self->cancel; });
-$bb = Gtk2::HButtonBox->new;
-$bb->set_layout_default('edge');
 $bb->add($button);
   $button = Gtk2::Button->new("Start");
   $tt->set_tip($button, "Start SelfControl");
@@ -286,6 +292,41 @@ $bb->add($button);
 # Show
   $window->add($box);
   $window->show_all;
+}
+
+sub about {
+  my ($self) = @_;
+  my $about = $self->{about};
+  if ($about) {
+    $about->run;
+    $about->hide;
+    return;
+  }
+  $about = Gtk2::AboutDialog->new;
+  $self->{about} = $about;
+  $about->set_logo_icon_name('selfcontrol');
+  $about->set_program_name('SelfControl');
+  $about->set_version($SelfControl::VERSION);
+  $about->set_comments("Helping you get things done\nby not getting things done myself.");
+  $about->set_copyright("\x{00a9}".'2010 zengargoyle');
+  $about->set_website_label('SelfControl Homepage');
+  $about->set_website('http://svn.jklmnop.net/projects/SelfControl.html');
+  $about->set_license(<<_EOL_);
+LICENSE AND COPYRIGHT
+
+Copyright \x{00a9} 2010 zengargoyle
+
+This program is free software; you can redistribute it and/or modify it under the terms of either: the GNU General Public License as published by the Free Software Foundation; or the Artistic License.
+
+See http://dev.perl.org/licenses/ for more information.
+_EOL_
+  $about->set_wrap_license(TRUE);
+  $about->set_authors('zengargoyle <zengargoyle@gmail.com>');
+  #$about->set_documenters('zengargoyle <zengargoyle@gmail.com');
+  #$about->set_translator_credits('translator');
+  #$about->set_artists('artist1');
+  $about->run;
+  $about->hide;
 }
 
 #
@@ -364,3 +405,14 @@ sub update_time {
 }
 
 1; # End of SelfControl::UI
+
+__END__
+sub build_dialog {
+  #$d = Gtk2::MessageDialog->new($w, 'destroy-with-parent', 'info', 'ok', 'My message here');
+  #$d = Gtk2::MessageDialog->new_with_markup($w, 'destroy-with-parent', 'info', 'ok', '<b>My message</b> here');
+  $d = Gtk2::MessageDialog->new_with_markup($w, 'destroy-with-parent', 'error', 'ok', '<b>My message</b> here');
+  $d->format_secondary_markup('<i>what is this</i>');
+  $d->run;
+  $d->destroy;
+}
+
