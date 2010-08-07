@@ -1,10 +1,9 @@
 [Desktop Entry]
 Type=Application
-Encoding=UTF-8
 Name=Self Control
 GenericName=Self Control
 Comment=Temporarily block access to web sites
-Icon=application-default-icon
+Icon=selfcontrol
 Exec=SelfControl
 Terminal=false
-Categories=Application;Network
+Categories=Network;
