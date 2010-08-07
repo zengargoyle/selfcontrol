@@ -1,9 +1,17 @@
 #!perl
 
-use Test::More tests => 2;
+use Test::More;
+
+my %cmd = (
+  iptables => 1,
+  at => 1,
+  ed => 1,
+);
+
+plan tests => scalar keys %cmd;
 
 #diag( "Testing SelfControl $SelfControl::VERSION, Perl $], $^X" );
 
-# Needed system programs in PATH, match '/bin/*' for better matching.
-like( qx/which iptables/, qr:bin/iptables:, "Have 'iptables'");
-like( qx/which at/, qr:bin/at:, "Have 'at'");
+for my $cmd (keys %cmd) {
+  ok(length `which $cmd`, "Have '$cmd' in \$PATH");
+}
