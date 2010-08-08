@@ -5,12 +5,13 @@
 use strict;
 use warnings;
 use Sys::Syslog;
-use YAML ();
+#use YAML ();
 use SelfControl;
-use SelfControl::Config;
 use SelfControl::Root;
+#use SelfControl::Config;
 
 openlog('SelfControl','pid','local0');
+
 #
 # Get config from $ENV{HOME} of calling user.  Some trickery
 # involved since %ENV is cleared by sudo for security reasons.
@@ -33,13 +34,11 @@ if ($< == 0) {
   exit;
 }
 
-syslog('info','starting user');
 #
 # not root
 #
 
-my @SUDO;
-@SUDO = (gksudo => '-D' => 'Self Control');  # XXX annoying if testing.
+syslog('info','starting user');
 
 =for comment - future non-gui interface.
 
@@ -52,34 +51,12 @@ else {
 
 =cut
 
-# default config if none exits.
-# hope nobody misses example.com for one hour
-my $Config = {
-  version => 1,
-  allow => 1,
-  hosts => [[qw<example.com 192.0.32.10>]],
-  timeout => 5,
-};
-
-$Config = load_config($ConfigFile, $Config);
-
-require SelfControl::UI;
-my $UI = SelfControl::UI->new({
-  config => $Config,
+my $app = SelfControl->new({
+  config_file => $ConfigFile,
+  can_queue => 1,
+  sudo => [gksudo => '-D' => 'selfcontrol'],
 });
-$UI->run();
-$Config = $UI->{config};
-
-#
-# if 'Start' was clicked, save changes and run self as root
-# to apply the blocks and schedule their removal.
-#
-if ($UI->{started}) {
-  save_config($ConfigFile, $Config);
-  if (scalar @{$Config->{hosts}}) {
-    system(@SUDO, $0);
-  }
-}
+$app->run;
 
 syslog('info','finished user');
 closelog;

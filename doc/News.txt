@@ -1,4 +1,13 @@
 
+Sun Aug  8 11:34:33 UTC 2010
+----------------------------
+
+Now with sortable listing of active blocks.  Needs some sudoers hacking.
+Sortable lists. Refactored down to a 63 line driver script with seperate
+modes for root vs. user stuff.  Hope to add in a HTTP proxy mode as well.
+Next on the list is more clean/docs/test and adding in Whitelists with
+proxy redirection, saved favorite configurations, etc.
+
 Sat Aug  7 20:48:17 UTC 2010
 ----------------------------
 

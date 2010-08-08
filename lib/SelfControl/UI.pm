@@ -7,6 +7,9 @@ use strict;
 use constant TRUE => 1;
 use constant FALSE => 0;
 
+use Time::Local;
+
+
 =head1 NAME
 
 SelfControl::UI - The Gtk2 user interface for the SelfControl application.
@@ -61,6 +64,8 @@ Contains the reference to the configuration hash.
 
 =head1 SUBROUTINES/METHODS
 
+=cut
+
 =head2 new()
 
     $ui = SelfControl::UI->new({ config => $SelfControlConfig })
@@ -87,8 +92,25 @@ sub run {
   require Gtk2::SimpleList;
   require Gtk2::SimpleMenu;
   Gtk2->init;
+  add_custom_col();
   $self->build_ui;
   Gtk2->main;
+}
+
+sub add_custom_col {
+Gtk2::SimpleList->add_column_type(
+  'ts',
+    type => 'Glib::Scalar',
+    renderer => 'Gtk2::CellRendererText',
+    attr => sub {
+      my ($tree_column, $cell, $model, $iter, $i) = @_;
+      my $info = $model->get ($iter, $i);
+      my @t = localtime($info);
+      $t[4]++;$t[5]+=1900;$t[5]=~s/^\d\d//;
+      $info = sprintf "%02d/%02d/%02d %02d:%02d:%02d", @t[4,3,5,2,1,0,];
+      $cell->set(text => $info);
+    },
+);
 }
 
 =head1 AUTHOR
@@ -179,7 +201,6 @@ sub menu {
   return $menu;
 }
 
-sub view_active {}
 
 sub build_ui {
   my ($self) = @_;
@@ -195,6 +216,7 @@ sub build_ui {
 
   $window->set_title("SelfControl");
   $window->set_border_width(0);
+  $window->set_default_size(500,500);
 
   $window->signal_connect(delete_event => sub { FALSE; });
   $window->signal_connect(destroy => sub { Gtk2->main_quit; });
@@ -291,29 +313,29 @@ $bb->add($button);
   $frame = Gtk2::Frame->new('Block Time');
   $box->pack_start($frame, TRUE, TRUE, 0);
 
-{
-  my $vbox = Gtk2::VBox->new(FALSE, 0);
+  {
+    my $vbox = Gtk2::VBox->new(FALSE, 0);
 
-  my $scale = Gtk2::HScale->new_with_range(5, (24*60), 5);
-  $self->{config}->{timeout} = 5 if $self->{config}->{timeout} < 5;
-  $scale->set_digits(0);
-  $scale->set_draw_value(0);
-  my $label = Gtk2::Label->new('');
-  $self->{config}->{timeout} = update_time($label, $self->{config}->{timeout});
-  $scale->set_value($self->{config}->{timeout});
+    my $scale = Gtk2::HScale->new_with_range(5, (24*60), 5);
+    $self->{config}->{timeout} = 5 if $self->{config}->{timeout} < 5;
+    $scale->set_digits(0);
+    $scale->set_draw_value(0);
+    my $label = Gtk2::Label->new('');
+    $self->{config}->{timeout} = update_time($label, $self->{config}->{timeout});
+    $scale->set_value($self->{config}->{timeout});
 
-  $scale->signal_connect(value_changed => sub {
-    my ($s) = @_;
-    my $t = $s->get_adjustment->value;
-    $self->{config}->{timeout} = update_time($label, $t);
-    $s->set_value($self->{config}->{timeout});
-    }
-  );
+    $scale->signal_connect(value_changed => sub {
+      my ($s) = @_;
+      my $t = $s->get_adjustment->value;
+      $self->{config}->{timeout} = update_time($label, $t);
+      $s->set_value($self->{config}->{timeout});
+      }
+    );
 
-  $vbox->pack_start($scale, FALSE, FALSE, 0);
-  $vbox->pack_start($label, FALSE, FALSE, 0);
-  $frame->add($vbox);
-}
+    $vbox->pack_start($scale, FALSE, FALSE, 0);
+    $vbox->pack_start($label, FALSE, FALSE, 0);
+    $frame->add($vbox);
+  }
 
 # Button
 $bb = Gtk2::HButtonBox->new;
@@ -366,6 +388,59 @@ _EOL_
   #$about->set_artists('artist1');
   $about->run;
   $about->hide;
+}
+
+sub view_active {
+  my ($self) = @_;
+  my $w = $self->{window};
+
+  my $d;
+  $d = Gtk2::Dialog->new('Active Blocks',$w,'destroy-with-parent', 'gtk-ok' => 'none');
+  $d->set_default_size(500,240);
+
+  my $f = Gtk2::Frame->new('testing');
+  $d->get_content_area()->add($f);
+
+  my $s = Gtk2::ScrolledWindow->new;
+  $s->set_policy('automatic','automatic');
+  $f->add($s);
+
+  my $ls = Gtk2::SimpleList->new(
+    'tsort'  => 'text',
+    'Job ID' => 'text',
+    'Expiration Time'   => 'ts',
+    'Host'   => 'text',
+    'IP'     => 'text',
+    'ipsort' => 'text'
+  );
+  $s->add($ls);
+
+  $ls->set_rules_hint(TRUE);
+
+  $ls->get_column(0)->set_visible(FALSE);
+  $ls->get_column(1)->set_visible(FALSE);
+  $ls->get_column(2)->set_sort_column_id(0);
+  $ls->get_column(3)->set_sort_column_id(3);
+  $ls->get_column(4)->set_sort_column_id(5);
+  $ls->get_column(5)->set_visible(FALSE);
+if (0) {
+  my $filter = SelfControl::get_active($self->{config});
+  my $jobs = $self->{config}{jobs};
+  for my $k (keys %{$jobs}) {
+    my ($d, $q) = @{$jobs->{$k}};
+    for my $y (@{$q}) {
+      my ($h, $i) = @{$y};
+      push @{$ls->{data}}, [$d, $d, $h, $i, ip_toi($i)];
+    }
+  }
+}
+  my @abl;
+  @abl = map {[$_->[1],@{$_},ip_toi($_->[3])]} @{$self->{active_blocks}};
+  $ls->set_data_array(\@abl);
+  $d->set_default_response('ok');
+  $d->show_all;
+  $d->run;
+  $d->destroy;
 }
 
 #
@@ -441,6 +516,10 @@ sub update_time {
   $text .= "s"          if $m > 1;
   $l->set_text($text);
   return $t;
+}
+sub ip_toi {
+  use Socket;
+  unpack "N", inet_aton($_[0]);
 }
 
 1; # End of SelfControl::UI

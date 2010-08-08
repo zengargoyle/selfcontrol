@@ -2,6 +2,9 @@ package SelfControl;
 
 use warnings;
 use strict;
+use YAML qw<Dump>;
+
+use SelfControl::Config;
 
 =head1 NAME
 
@@ -14,7 +17,6 @@ Version 0.02
 =cut
 
 our $VERSION = '0.02';
-
 
 =head1 SYNOPSIS
 
@@ -34,48 +36,95 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
-
 =cut
 
-sub get_active {
-use YAML qw<Dump>;
-  my ($config) = @_;
-  my $queue = get_queue();
-  my $jobs = $config->{jobs};
-
-  # delete completed jobs;
-  for my $id (keys %{$jobs}) {
-    delete $jobs->{$id} unless exists $queue->{$id}
-  }
-
-  # hash of host,ip = date; order of dates uniq
-  # latest date wins
-  my %last;
-  my @order;
-  for my $id (sort {$a <=> $b} keys %{$jobs}) {
-    my $job = $jobs->{$id};
-    my $date = shift @{$job};
-    for my $entry (@{$job}) {
-      $last{$entry->[1]}{$entry->[0]} = $date;
-      push @order, $date unless grep {$date eq $_} @order;
-    }
-  }
-
-  # build [date, [host, ip]] in date,host order
-  my @sorted;
-  for my $date (@order) {
-    my @keep = ();
-    for my $host (keys %last) {
-      for my $ip (keys %{$last{$host}}) {
-        push @keep, [$host, $ip] if $last{$host}{$ip} eq $date;
-      }
-    }
-    push @sorted, [$date, [sort {$a->[0] cmp $b->[0]} @keep]] if @keep;
-  }
-  return \@sorted;
+sub new {
+  my ($class, $self) = @_;
+  bless $self, $class;
+  $self->init;
+  return $self;
 }
+
+sub init {
+  my ($self) = @_;
+
+  $self->{config} = load_config($self->{config_file});
+
+   # clean out expired jobs
+   if ($self->{can_queue}) {
+    $self->get_queue;
+    my $nj = cc($self->{config}{jobs});
+    for my $k (keys %{$nj}) {
+      delete $nj->{$k} unless exists $self->{queue}->{$k};
+    }
+    $self->{config}{jobs} = $nj;
+    save_config($self->{config_file}, $self->{config});
+    $self->{did_queue} = 1;
+  }
+  return $self;
+}
+
+sub run {
+  my ($self) = @_;
+  $self->active_blocks;
+
+  require SelfControl::UI;
+  $self = SelfControl::UI->new($self);
+  $self->run();
+
+  #
+  # if 'Start' was clicked, save changes and run self as root
+  # to apply the blocks and schedule their removal.
+  #
+  if ($self->{started}) {
+    save_config($self->{config_file}, $self->{config});
+    if (scalar @{$self->{config}->{hosts}}) {
+      system(@{$self->{sudo}}, $0);
+    }
+  }
+  bless $self, __PACKAGE__;
+  return $self;
+}
+
+# create a list suitable for SimpleList
+# $self->{active_blocks} = [[jid, ts, hn, ip]];
+
+sub active_blocks {
+  my ($self) = @_;
+  my $uj = cc($self->{config}{jobs});
+
+  my @flat;
+  for my $jid (keys %{$uj}) {
+    my ($ts, $ha) = @{$uj->{$jid}};
+    for my $he (@{$ha}) {
+      my ($hn, $hi) = @{$he};
+      push @flat, [$jid,$ts,$hn,$hi];
+    }
+  }
+
+  my @sorted = sort {$a->[1] <=> $b->[1]} @flat;
+
+  my (%last, %jtime);
+  for my $x (@sorted) {
+    $last{$x->[2]}{$x->[3]} = $x->[1]; $jtime{$x->[1]} = $x->[0];
+  }
+
+  my @list;
+  for my $hn (sort keys %last) {
+    for my $ip (keys %{$last{$hn}}) {
+      my $ts = $last{$hn}{$ip};
+      push @list, [$jtime{$ts}, $ts, $hn, $ip];
+    }
+  }
+
+  $self->{active_blocks} = \@list;
+}
+
+# `atq` - requires sudoers line to really work:
+# username ALL = NOPASSWD: /usr/bin/atq
+
 sub get_queue {
+  my ($self) = @_;
   my @lines = `sudo atq`;
   chomp @lines;
 
@@ -97,16 +146,14 @@ sub get_queue {
     next unless $4 eq 'root';
     $data{$1} = $2;
   }
-  return \%data;
-}
-sub function1 {
+  return $self->{queue} = \%data;
 }
 
-=head2 function2
+# $x = cc($y) - serialized copy
 
-=cut
-
-sub function2 {
+sub cc {
+  my ($x) = @_;
+  YAML::Load(YAML::Dump($x));
 }
 
 =head1 AUTHOR
