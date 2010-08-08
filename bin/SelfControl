@@ -26,9 +26,8 @@ my $ConfigFile = "$HOME/.selfcontrol";
 #
 if ($< == 0) {
   syslog('info','starting root');
-  check_chain();
-  add_chain($ConfigFile);
-  add_hosts($ConfigFile);
+  my $app = SelfControl::Root->new({config_file => $ConfigFile});
+  $app->run;
   syslog('info','finished root');
   closelog;
   exit;

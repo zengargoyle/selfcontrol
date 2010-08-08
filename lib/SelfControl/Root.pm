@@ -7,6 +7,7 @@ use Exporter qw<import>;
 our @EXPORT = qw<check_chain add_chain add_hosts>;
 
 use Sys::Syslog;
+use YAML;
 use SelfControl::Config;
 
 =head1 NAME
@@ -49,6 +50,7 @@ if you don't export anything, such as for a purely object-oriented module.
 #
 
 sub check_chain {
+  my ($self) = @_;
   my $out;
 syslog('info',"check_chain");
   $out = `iptables -S SelfControl`;
@@ -63,49 +65,84 @@ syslog('info',"check_chain");
     system("iptables -A OUTPUT -j SelfControl") and syslog('error','could not add SelfControl chain to OUTPUT chain');
   }
 }
-sub add_chain {
-  my ($ConfigFile) = @_;
-  unless (-f $ConfigFile) {
-    die "No Config File found: '$ConfigFile'\n";
-  }
-  my ($Config) = load_config($ConfigFile);
+sub new {
+  my ($class, $self) = @_;
+  bless $self, $class;
+  $self->init();
+  return $self;
+}
+sub init {
+  my ($self) = @_;
+  $self->{config} = load_config($self->{config_file});
+}
+sub run {
+  my ($self) = @_;
+  print YAML::Dump($self);
+  $self->{ts} = "now + $self->{config}->{timeout} minutes";
+  $self->check_chain;
+  $self->add_chain;
+  $self->add_hosts;
+  $self->do_undo;
+  save_config($self->{config_file}, $self->{config});
+}
 
-  my $ts = "now + $Config->{timeout} minutes";
-  open my $at, '|-', "at '$ts' 2>/dev/null" or die $!;
-  for my $hr (@{$Config->{hosts}}) {
+sub add_chain {
+  my ($self) = @_;
+  for my $hr (@{$self->{config}->{hosts}}) {
+    push @{$self->{blocked}}, [@{$hr}];
     my $h = $hr->[1];
-    system("iptables -I SelfControl -d $h -j DROP");
-    print $at "iptables -D SelfControl -d $h -j DROP\n";
+    push @{$self->{iptables_do}},   "iptables -I SelfControl -d $h -j DROP";
+    push @{$self->{iptables_undo}}, "iptables -D SelfControl -d $h -j DROP";
   }
-  close $at;
 }
 sub add_hosts {
-  my ($ConfigFile) = @_;
-  unless (-f $ConfigFile) {
-    die "No Config File found: '$ConfigFile'\n";
-  }
-  my ($Config) = load_config($ConfigFile);
-  my $ts = "now + $Config->{timeout} minutes";
+  my ($self) = @_;
   my @hn;
-  for my $hr (@{$Config->{hosts}}) {
+  for my $hr (@{$self->{config}->{hosts}}) {
     my $h = $hr->[0];
     next if $h =~ /\.\d{1,3}$/;  # purge any IP only.
     push @hn, $h;
   }
-  if (@hn) {
-    open my $at, '|-', "at '$ts' 2>/dev/null" or die $!;
-    open my $hf, '>>', '/etc/hosts' or die $!;
-    print $at "ed /etc/hosts <<_EOF_ 2>/dev/null\n";
-    for (@hn) {
-      my $esc = $_;
-      $esc =~ s/\./\\./g;
-      print $hf "127.0.0.2 $_ # SelfControl - DO NOT EDIT!\n";
-      print $at "/^127\\.0\\.0\\.2 $esc # SelfControl - DO NOT EDIT!\$/d\n";
-    }
-    close $hf;
-    print $at "wq\n_EOF_\n";
-    close $at;
+  for (@hn) {
+    my $esc = $_;
+    $esc =~ s/\./\\./g;
+    push @{$self->{hosts_do}},   "127.0.0.2 $_ # SelfControl - DO NOT EDIT!";
+    push @{$self->{hosts_undo}}, "/^127\\.0\\.0\\.2 $esc # SelfControl - DO NOT EDIT!\$/d";
   }
+}
+
+sub do_undo {
+  my ($self) = @_;
+
+  # do /etc/hosts
+  open my $hf, '>>', '/etc/hosts';
+  unless ($hf) {
+    syslog('error','can not open /etc/hosts for writing');
+  }
+  else {
+    print $hf "$_\n" for @{$self->{hosts_do}};
+    close $hf;
+  }
+
+  # do iptables
+  for (@{$self->{iptables_do}}) {
+    if (system($_)) {
+      syslog('error',"iptables failed: $_");
+      last;
+    }
+  }
+
+  # undo
+  my $cmd = join("\n",
+    @{$self->{iptables_undo}},
+    'ed /etc/hosts <<_EOF_ 2>/dev/null',
+    @{$self->{hosts_undo}},
+    'wq',
+    '_EOF_',
+  );
+  my ($job, $when) = do_at($cmd, $self->{ts});
+  $when = time() + ($self->{config}->{timeout} * 60);
+  $self->{config}{jobs}{$job} = [$when, $self->{blocked}];
 }
 
 sub do_at {  # $cmd,$ts
