@@ -1,7 +1,7 @@
 package SelfControl::Root;
 my $ID = {
         date => q$Date$,
-        headurl => q$HeadURL:$,
+        headurl => q$HeadURL$,
         author => q$Author$,
         revision => q$Revision$,
 };
