@@ -145,7 +145,7 @@ sub do_undo {
   $self->{config}{jobs}{$job} = [$when, $self->{blocked}];
 }
 
-sub do_at {  # $cmd,$ts
+sub do_at {                  # $jid,$when = $cmd,$tspec
   my ($cmd, $ts) = @_;
   my ($rc, $output) = spawn_simple($cmd,'at',$ts);
   return undef if $rc;
