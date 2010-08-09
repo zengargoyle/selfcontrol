@@ -26,8 +26,8 @@ my $builder = MyBuild->new(
     create_makefile_pl => 'traditional',
 
     gnome_files => {
-      'share/icons/selfcontrol.svg'     => 'gnome/icons/selfcontrol.svg',
-      'share/selfcontrol.desktop' => 'gnome/applications/selfcontrol.desktop',
+      'contrib/icons/selfcontrol.svg'     => 'gnome/icons/selfcontrol.svg',
+      'contrib/selfcontrol.desktop' => 'gnome/applications/selfcontrol.desktop',
     },
 );
 
