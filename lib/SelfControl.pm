@@ -49,19 +49,24 @@ sub init {
   my ($self) = @_;
 
   $self->{config} = load_config($self->{config_file});
-
-   # clean out expired jobs
-   if ($self->{can_queue}) {
+  if ($self->{can_queue}) {
     $self->get_queue;
-    my $nj = cc($self->{config}{jobs});
-    for my $k (keys %{$nj}) {
-      delete $nj->{$k} unless exists $self->{queue}->{$k};
-    }
-    $self->{config}{jobs} = $nj;
+    $self->{config}{jobs} = $self->clean_expired_jobs;
     save_config($self->{config_file}, $self->{config});
     $self->{did_queue} = 1;
   }
+
   return $self;
+}
+
+sub clean_expired_jobs {
+  my ($self) = @_;
+  # clean out expired jobs
+  my $nj = cc($self->{config}{jobs});
+  for my $k (keys %{$nj}) {
+    delete $nj->{$k} unless exists $self->{queue}->{$k};
+  }
+  return $nj
 }
 
 sub run {
