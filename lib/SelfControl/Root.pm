@@ -99,6 +99,8 @@ sub add_chain {
     my $h = $hr->[1];
     push @{$self->{iptables_do}},   "iptables -I SelfControl -d $h -j DROP";
     push @{$self->{iptables_undo}}, "iptables -D SelfControl -d $h -j DROP";
+    (my $esc = $h) =~ s/\./\\./g;
+    push @{$self->{iptables_save}}, "^-A SelfControl -d $esc/32 -j DROP/d";
   }
 }
 sub add_hosts {
@@ -129,6 +131,7 @@ sub do_undo {
     print $hf "$_\n" for @{$self->{hosts_do}};
     close $hf;
   }
+  $self->{hosts_do} = undef;
 
   # do iptables
   for (@{$self->{iptables_do}}) {
@@ -137,15 +140,24 @@ sub do_undo {
       last;
     }
   }
+  $self->{iptables_do} = undef;
 
   # undo
   my $cmd = join("\n",
     @{$self->{iptables_undo}},
+    'ed /etc/selfcontrol/iptables.save <<_EOF_ 2>/dev/null',
+    @{$self->{iptables_save}},
+    'wq',
+    '_EOF_',
     'ed /etc/hosts <<_EOF_ 2>/dev/null',
     @{$self->{hosts_undo}},
     'wq',
     '_EOF_',
   );
+  $self->{iptables_undo} = undef;
+  $self->{iptables_save} = undef;
+  $self->{hosts_undo} = undef;
+  
   my ($job, $when) = do_at($cmd, $self->{ts});
   $when = time() + ($self->{config}->{timeout} * 60);
   $self->{config}{jobs}{$job} = [$when, $self->{blocked}];

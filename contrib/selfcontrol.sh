@@ -17,18 +17,20 @@
 # can't believe ubuntu didn't have one of these by default. :(
 #
 
-SC_FILE=/etc/iptables.selfcontrol
+# unwise to change these!
+SC_ETC=/etc/selfcontrol
+IPT_FILE=iptables.save
 
 PATH=/sbin:/bin
 
 case "$1" in
 start)
-    if [ -f $SC_FILE ]; then
-        iptables-restore <$SC_FILE
+    if [ -f $SC_ETC/$IPT_FILE ]; then
+        iptables-restore <$SC_ETC/$IPT_FILE
     fi
     ;;
 stop)
-    iptables-save >$SC_FILE
+    iptables-save >$SC_ETC/$IPT_FILE
     ;;
 restart)
     ;;
