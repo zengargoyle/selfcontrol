@@ -2,6 +2,12 @@
 #
 # SelfControl -- Stop internet distractions so you can get some work done.
 #
+my $ID = {
+        date => q$Date$,
+        headurl => q$HeadURL:$,
+        author => q$Author$,
+        revision => q$Revision$,
+};
 use strict;
 use warnings;
 use Sys::Syslog;

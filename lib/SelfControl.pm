@@ -1,4 +1,10 @@
 package SelfControl;
+my $ID = {
+        date => q$Date$,
+        headurl => q$HeadURL:$,
+        author => q$Author$,
+        revision => q$Revision$,
+};
 
 use warnings;
 use strict;
