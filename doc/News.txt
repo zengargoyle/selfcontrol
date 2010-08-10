@@ -1,4 +1,29 @@
 
+Tue Aug 10 19:21:15 UTC 2010
+----------------------------
+
+Woot! bugs.  (at least people are trying it.)
+
+* iptables v1.3.8 (and others maybe) don't support '-S' option to
+  show chains.  v1.4.4 does.  No big deal, still works just gave a
+  couple error messages.  Those errors are now hidden.
+
+* Rather annoying, default Ubuntu doesn't have a save/restore iptables
+  on shutdown/reboot.  I just assumed it did (CentOS does :P)  Fixed
+  but takes a bit of manual work from the Terminal.
+
+  wget http://svn.jklmnop.net/proj/SelfControl/trunk/contrib/selfcontrol.sh
+  sudo cp selfcontrol.sh /etc/init.d/selfcontrol
+  sudo mkdir /etc/selfcontrol
+  sudo update-rc.d selfcontrol defaults
+  sudo /etc/init.d/selfcontrol stop
+  # no need to 'start' again.
+
+That's it, ripped it off from from the iptables-persistent package, but
+that version didn't save before shutdown, just restored from a file on
+reboot.  (it's just an iptables-save and iptables-restore wraped up in an
+init script.)
+
 Sun Aug  8 11:34:33 UTC 2010
 ----------------------------
 
