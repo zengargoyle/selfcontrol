@@ -59,16 +59,16 @@ sub check_chain {
   my ($self) = @_;
   my $out;
 syslog('info',"check_chain");
-  $out = `iptables -S SelfControl`;
+  $out = `iptables -S SelfControl 2>/dev/null`;
   unless ($out =~ m/^-N SelfControl\s*$/m) {
     syslog('info','creating SelfControl chain');
-    system("iptables -N SelfControl") and syslog('error','could not create SelfControl chain');
+    system("iptables -N SelfControl 2>/dev/null") and syslog('error','could not create SelfControl chain');
   }
 
-  $out = `iptables -S OUTPUT`;
+  $out = `iptables -S OUTPUT 2>/dev/null`;
   unless ($out =~ m/^-A OUTPUT -j SelfControl\s*$/m) {
     syslog('info','adding SelfControl chain to OUTPUT chain');
-    system("iptables -A OUTPUT -j SelfControl") and syslog('error','could not add SelfControl chain to OUTPUT chain');
+    system("iptables -A OUTPUT -j SelfControl 2>dev/null") and syslog('error','could not add SelfControl chain to OUTPUT chain');
   }
 }
 sub new {
@@ -83,7 +83,7 @@ sub init {
 }
 sub run {
   my ($self) = @_;
-  print YAML::Dump($self);
+#  print YAML::Dump($self);
   $self->{ts} = "now + $self->{config}->{timeout} minutes";
   $self->check_chain;
   $self->add_chain;
