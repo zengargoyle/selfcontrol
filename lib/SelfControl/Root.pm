@@ -99,8 +99,7 @@ sub add_chain {
     my $h = $hr->[1];
     push @{$self->{iptables_do}},   "iptables -I SelfControl -d $h -j DROP";
     push @{$self->{iptables_undo}}, "iptables -D SelfControl -d $h -j DROP";
-    (my $esc = $h) =~ s/\./\\./g;
-    push @{$self->{iptables_save}}, "^-A SelfControl -d $esc/32 -j DROP/d";
+    push @{$self->{iptables_save}}, "^-A SelfControl -d ".quotemeta($h)."/32 -j DROP/d";
   }
 }
 sub add_hosts {
@@ -111,11 +110,9 @@ sub add_hosts {
     next if $h =~ /\.\d{1,3}$/;  # purge any IP only.
     push @hn, $h;
   }
-  for (@hn) {
-    my $esc = $_;
-    $esc =~ s/\./\\./g;
-    push @{$self->{hosts_do}},   "127.0.0.2 $_ # SelfControl - DO NOT EDIT!";
-    push @{$self->{hosts_undo}}, "/^127\\.0\\.0\\.2 $esc # SelfControl - DO NOT EDIT!\$/d";
+  for my $h (@hn) {
+    push @{$self->{hosts_do}},   "127.0.0.2 $h # SelfControl - DO NOT EDIT!";
+    push @{$self->{hosts_undo}}, "/^".quotemeta("127.0.0.2 $h")." # SelfControl - DO NOT EDIT!\$/d";
   }
 }
 
