@@ -30,6 +30,7 @@ start)
     fi
     ;;
 stop)
+    [ -d $SC_ETC ] || mkdir $SC_ETC
     iptables-save >$SC_ETC/$IPT_FILE
     ;;
 restart)
