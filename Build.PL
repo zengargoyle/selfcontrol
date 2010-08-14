@@ -23,7 +23,7 @@ my $builder = MyBuild->new(
         'Test::More' => 0,
     },
     add_to_cleanup      => [ 'SelfControl-*' ],
-    create_makefile_pl => 'traditional',
+    create_makefile_pl => 'small',
 
     gnome_files => {
       'contrib/icons/selfcontrol.svg'     => 'gnome/icons/selfcontrol.svg',
@@ -31,7 +31,7 @@ my $builder = MyBuild->new(
     },
 );
 
-$builder->install_path(gnome => catfile($builder->prefix, 'share')),
+$builder->install_path(gnome => catfile($builder->prefix, 'share'));
 $builder->add_build_element('gnome');
 
 $builder->create_build_script();
