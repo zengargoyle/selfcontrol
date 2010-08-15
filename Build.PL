@@ -26,12 +26,18 @@ my $builder = MyBuild->new(
     create_makefile_pl => 'small',
 
     gnome_files => {
-      'contrib/icons/selfcontrol.svg'     => 'gnome/icons/selfcontrol.svg',
+      'contrib/icons/selfcontrol.svg'     => 'gnome/icons/hicolor/scalable/apps/selfcontrol.svg',
       'contrib/selfcontrol.desktop' => 'gnome/applications/selfcontrol.desktop',
+    },
+    etc_files => {
+      'contrib/selfcontrol.sh' => 'etc/init.d/selfcontrol',
+      'contrib/keep'           => 'etc/selfcontrol/.keep',
     },
 );
 
-$builder->install_path(gnome => catfile($builder->prefix, 'share'));
+$builder->install_path(gnome => '/usr/share');
 $builder->add_build_element('gnome');
+$builder->install_path(etc => '/etc');
+$builder->add_build_element('etc');
 
 $builder->create_build_script();
