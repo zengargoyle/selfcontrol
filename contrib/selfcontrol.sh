@@ -23,17 +23,29 @@ IPT_FILE=iptables.save
 
 PATH=/sbin:/bin
 
+start() {
+  if [ -f $SC_ETC/$IPT_FILE ]; then
+    iptables-restore <$SC_ETC/$IPT_FILE
+  else
+   stop
+  fi
+}
+
+stop() {
+  [ -d $SC_ETC ] || mkdir $SC_ETC
+  iptables-save >$SC_ETC/$IPT_FILE
+}
+
 case "$1" in
 start)
-    if [ -f $SC_ETC/$IPT_FILE ]; then
-        iptables-restore <$SC_ETC/$IPT_FILE
-    fi
+  start
     ;;
 stop)
-    [ -d $SC_ETC ] || mkdir $SC_ETC
-    iptables-save >$SC_ETC/$IPT_FILE
+  stop
     ;;
 restart)
+  stop
+  start
     ;;
 status)
     iptables --list SelfControl >/dev/null 2>&1 && ret=0 || ret=1
@@ -42,6 +54,7 @@ status)
     else
         echo not installed
     fi
+    exit $ret
     ;;
 *)
     echo "Usage: $0 {start|stop|restart|status}" >&2
