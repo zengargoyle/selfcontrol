@@ -1,0 +1,22 @@
+Source: selfcontrol
+Section: net
+Priority: optional
+Build-Depends: debhelper (>= 7), perl (>= 5.10) | libmodule-build-perl
+Build-Depends-Indep: perl, libyaml-perl, libgtk2-perl
+Maintainer: zengargoyle <zengargoyle@gmail.com>
+Standards-Version: 3.8.3
+Homepage: http://svn.jklmnop.net/projects/SelfControl.html
+
+Package: selfcontrol
+Architecture: all
+Depends: ${perl:Depends}, ${misc:Depends}, libyaml-perl, libgtk2-perl
+Description: SelfControl for Linux!
+ SelfControl for Linux!
+ .
+ A Linux port of the popular Selfcontrol program for Mac OS X
+ (http://visitsteve.com/work/selfcontrol).
+ .
+ This program allows you to block network access to specific sites
+ for a specified amount of time.  For example: no access to
+ www.metafilter.com for 30 minutes.  The intent is to prevent distraction
+ so you can get some work done.
