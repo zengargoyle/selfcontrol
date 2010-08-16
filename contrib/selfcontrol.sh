@@ -56,8 +56,10 @@ status)
     fi
     exit $ret
     ;;
+force-reload)
+    ;;
 *)
-    echo "Usage: $0 {start|stop|restart|status}" >&2
+    echo "Usage: $0 {start|stop|restart|status|force-reload}" >&2
     exit 1
     ;;
 esac
