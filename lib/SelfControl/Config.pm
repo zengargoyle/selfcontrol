@@ -56,6 +56,13 @@ sub load_config {
   if ( -f $ConfigFile ) {
     $Config = YAML::LoadFile($ConfigFile);
     if (exists $Config->{version}) {
+      if ($Config->{version} < 2) {
+        $Config->{can_queue} = 0;
+        $Config->{version} = 2;
+      }
+      else {
+        # can't happen. :)
+      }
     }
     else {
       $Config->{timeout} *= 60;  # pre 'version' in hours, convert to minutes.

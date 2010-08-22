@@ -59,9 +59,9 @@ else {
 
 my $app = SelfControl->new({
   config_file => $ConfigFile,
-  can_queue => 1,
   sudo => [gksudo => '-D' => 'selfcontrol'],
 });
+#$app->{config}{can_queue} = 1;
 $app->run;
 
 syslog('info','finished user');

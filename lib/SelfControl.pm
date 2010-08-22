@@ -55,7 +55,7 @@ sub init {
   my ($self) = @_;
 
   $self->{config} = load_config($self->{config_file});
-  if ($self->{can_queue}) {
+  if ($self->{config}{can_queue}) {
     $self->get_queue;
     $self->{config}{jobs} = $self->clean_expired_jobs;
     save_config($self->{config_file}, $self->{config});
