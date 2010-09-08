@@ -222,7 +222,7 @@ sub build_ui {
 
   $window->set_title("SelfControl");
   $window->set_border_width(0);
-  $window->set_default_size(500,500);
+  #$window->set_default_size(500,500);
 
   $window->signal_connect(delete_event => sub { FALSE; });
   $window->signal_connect(destroy => sub { Gtk2->main_quit; });
@@ -252,8 +252,8 @@ sub build_ui {
 
 # VBox
   $box = Gtk2::VBox->new(FALSE, 0);
-  $box->pack_start($self->{menu}->{widget}, TRUE, TRUE, 0);
-  $box->pack_start($frame, TRUE, TRUE, 0);
+  $box->pack_start($self->{menu}->{widget}, FALSE, FALSE, 0);
+  $box->pack_start($frame, FALSE, FALSE, 0);
 
 # Frame
   $frame = Gtk2::Frame->new('Host List');
@@ -317,7 +317,7 @@ $bb->add($button);
 
 # Frame
   $frame = Gtk2::Frame->new('Block Time');
-  $box->pack_start($frame, TRUE, TRUE, 0);
+  $box->pack_start($frame, FALSE, FALSE, 0);
 
   {
     my $vbox = Gtk2::VBox->new(FALSE, 0);
@@ -354,7 +354,7 @@ $bb->add($button);
   $tt->set_tip($button, "Start SelfControl");
   $button->signal_connect(clicked => sub { $self->start; });
 $bb->add($button);
-  $box->pack_start($bb, TRUE, TRUE, 0);
+  $box->pack_start($bb, FALSE, FALSE, 0);
 
 # Show
   $window->add($box);
