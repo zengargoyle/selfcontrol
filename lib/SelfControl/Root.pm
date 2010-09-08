@@ -137,11 +137,15 @@ sub do_undo {
       last;
     }
   }
+  if (system('/etc/init.d/selfcontrol', 'stop')) {
+    syslog('error',"init.d save failed: $_");
+  }
   $self->{iptables_do} = undef;
 
   # undo
   my $cmd = join("\n",
     @{$self->{iptables_undo}},
+    '/etc/init.d/selfcontrol stop',
     'ed /etc/selfcontrol/iptables.save <<_EOF_ 2>/dev/null',
     @{$self->{iptables_save}},
     'wq',
