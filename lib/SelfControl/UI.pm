@@ -404,7 +404,7 @@ sub view_active {
   $d = Gtk2::Dialog->new('Active Blocks',$w,'destroy-with-parent', 'gtk-ok' => 'none');
   $d->set_default_size(500,240);
 
-  my $f = Gtk2::Frame->new('testing');
+  my $f = Gtk2::Frame->new();
   $d->get_content_area()->add($f);
 
   my $s = Gtk2::ScrolledWindow->new;
