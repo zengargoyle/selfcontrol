@@ -10,6 +10,8 @@ Homepage: http://svn.jklmnop.net/projects/SelfControl.html
 Package: selfcontrol
 Architecture: all
 Depends: ${perl:Depends}, ${misc:Depends}, libyaml-perl, libgtk2-perl
+Replaces: libselfcontrol-perl
+Conflicts: libselfcontrol-perl
 Description: Temporarily restrict internet access.
  A Linux port of the popular SelfControl program for Mac OS X
  (http://visitsteve.com/work/selfcontrol).
