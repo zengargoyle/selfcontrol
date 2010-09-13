@@ -1,3 +1,16 @@
+selfcontrol (0.9-1) unstable; urgency=low
+
+  * New Upstream release.
+
+ -- zengargoyle <zengargoyle@gmail.com>  Sun, 12 Sep 2010 17:38:20 -0700
+
+selfcontrol (0.0.20100816-1) unstable; urgency=low
+
+  * Testing.
+  * Playing with dch. 
+
+ -- zengargoyle <zengargoyle@gmail.com>  Mon, 16 Aug 2010 17:13:59 -0700
+
 selfcontrol (0.0.20100815-1) unstable; urgency=low
 
   * Initial Release.

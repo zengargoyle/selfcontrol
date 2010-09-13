@@ -14,33 +14,22 @@ use SelfControl::Config;
 
 =head1 NAME
 
-SelfControl - The great new SelfControl!
+SelfControl - Block the internet for a period of time.
 
 =head1 VERSION
 
-Version 0.02
+Version 0.9
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.9';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
-    use SelfControl;
-
-    my $foo = SelfControl->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
+This application allows one to make a list of internet sites by
+hostname or IP address, and then to block access to those sites
+for a specifig amount of time.  For example: block access to
+metafilter.com and slashdot.org for 45 minutes.
 
 =cut
 
@@ -173,12 +162,7 @@ zengargoyle, C<< <zengargoyle at gmail.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-selfcontrol at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SelfControl>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C<zengargoyle at gmail.com>.
 
 =head1 SUPPORT
 
@@ -186,32 +170,15 @@ You can find documentation for this module with the perldoc command.
 
     perldoc SelfControl
 
-
 You can also look for information at:
 
 =over 4
 
-=item * RT: CPAN's request tracker
+=item * The SelfControl for Linux Homepage
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SelfControl>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/SelfControl>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/SelfControl>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/SelfControl/>
+L<http://svn.jklmnop.net/projects/SelfControl.html>
 
 =back
-
-
-=head1 ACKNOWLEDGEMENTS
-
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -223,6 +190,10 @@ by the Free Software Foundation; or the Artistic License.
 
 See http://dev.perl.org/licenses/ for more information.
 
+On Debian/Ubuntu systems these licenses can be found in:
+
+    /usr/share/common-licenses/Artistic
+    /usr/share/common-licenses/GPL
 
 =cut
 
