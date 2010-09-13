@@ -68,7 +68,7 @@ syslog('info',"check_chain");
   $out = `iptables -S OUTPUT 2>/dev/null`;
   unless ($out =~ m/^-A OUTPUT -j SelfControl\s*$/m) {
     syslog('info','adding SelfControl chain to OUTPUT chain');
-    system("iptables -A OUTPUT -j SelfControl 2>dev/null") and syslog('error','could not add SelfControl chain to OUTPUT chain');
+    system("iptables -A OUTPUT -j SelfControl 2>/dev/null") and syslog('error','could not add SelfControl chain to OUTPUT chain');
   }
 }
 sub new {
