@@ -1,3 +1,13 @@
+Mon Sep 13 02:15:47 UTC 2010
+----------------------------
+
+* Release selfcontrol-0.9
+* Active Blocks menuitem - Shows the longest acting blocks and
+  optionally with a sudoers entry will show only the currently
+  active blocks like you think it would...
+* About menuitem - At least gives a version number and a link to
+  the SelfControl for Linux Homepage.
+* (Re)Boot-time block save/restore included in the package version.
 
 Mon Aug 16 19:55:00 UTC 2010
 ----------------------------
