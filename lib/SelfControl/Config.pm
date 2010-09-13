@@ -69,6 +69,16 @@ sub load_config {
       $Config->{version} = 1;
     }
   }
+  else {
+    $Config = {
+      allow => 1,
+      can_queue => 0,
+      hosts => [[qw<example.com 192.0.32.10>]],
+      jobs => {},
+      timeout => 5,
+      version => 2,
+    };
+  }
   return $Config;
 }
 sub save_config {
