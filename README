@@ -1,51 +1,51 @@
-SelfControl
 
-At the moment, SelfControl is a single script (found in bin/SelfControl),
-so if you like quick and easy, you can just download it and run it.
+SelfControl for Linux
 
-MODULE README
+This is a Ubuntu, Debian, Linux port of the popular Mac OS X application
+SelfControl.  The idea is simple, You wish to get some work done and you
+need to avoid certain internet distractions like web sites, email, etc.
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+Install this application, start it up (it lives under the
+"Applications->Internet->Self Control" menu.  You add a few problem
+sites to your list, say metafilter.com, reddit.com, and example.com.
+Then you set how long you wish to block these sites, say 50 minutes.
+Then you click the 'Start' button.  Once you type your password those
+sites will be blocked for the duration you set.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+This is not perfect, it blocks the IP address with a firewall and
+adds an entry to your 'hosts' file.  This usually works, but some
+sites have so many names/IP addresses that you will have to use trial
+and error to find out what names you need to block.
+
+A possibly better description may be found on the SelfControl for Linux
+Homepage (http://svn.jklmnop.net/projects/SelfControl.html).
+
+This is developed on Ubuntu Lucid Lynx, should probably work on
+Debian, would take some hacking about for CentOS/RedHat/Other.
+It uses generic Linux tools: Perl, Gtk2, YAML, iptables, at, ed, sudo.
 
 
 INSTALLATION
 
-To install this module, run the following commands:
+TODO: better install instructions.
+TODO: better usage instructions.
 
-	perl Build.PL
-	./Build
-	./Build test
-	./Build install
+The best/easiest/working way to install is via a package manager.
+Download the latest package from:
 
-SUPPORT AND DOCUMENTATION
+http://github.com/zengargoyle/selfcontrol/downloads
+alternate site: http://svn.jklmnop.net/projects/SelfControl
 
-After installing, you can find documentation for this module with the
-perldoc command.
+To install, open a Terminal and do:
 
-    perldoc SelfControl
+$ sudo dpkg --install selfcontrol_VERSION_.deb
 
-You can also look for information at:
+(For installation the Perl module way see: INSTALL)
 
-    RT, CPAN's request tracker
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=SelfControl
+You can look for documentation at:
 
-    AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/SelfControl
-
-    CPAN Ratings
-        http://cpanratings.perl.org/d/SelfControl
-
-    Search CPAN
-        http://search.cpan.org/dist/SelfControl/
+    The SelfControl for Linux Homepage
+        http://svn.jklmnop.net/projects/SelfControl.html
 
 
 LICENSE AND COPYRIGHT
@@ -57,4 +57,9 @@ under the terms of either: the GNU General Public License as published
 by the Free Software Foundation; or the Artistic License.
 
 See http://dev.perl.org/licenses/ for more information.
+
+On Debian/Ubuntu systems, these licenses can usually be found in:
+
+    /usr/share/common-licenses/Artistic
+    /usr/share/common-licenses/GPL
 
