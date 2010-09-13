@@ -62,13 +62,13 @@ syslog('info',"check_chain");
   $out = `iptables -S SelfControl 2>/dev/null`;
   unless ($out =~ m/^-N SelfControl\s*$/m) {
     syslog('info','creating SelfControl chain');
-    system("iptables -N SelfControl 2>/dev/null") and syslog('error','could not create SelfControl chain');
+    system("iptables -N SelfControl 2>/dev/null") and syslog('err','could not create SelfControl chain');
   }
 
   $out = `iptables -S OUTPUT 2>/dev/null`;
   unless ($out =~ m/^-A OUTPUT -j SelfControl\s*$/m) {
     syslog('info','adding SelfControl chain to OUTPUT chain');
-    system("iptables -A OUTPUT -j SelfControl 2>/dev/null") and syslog('error','could not add SelfControl chain to OUTPUT chain');
+    system("iptables -A OUTPUT -j SelfControl 2>/dev/null") and syslog('err','could not add SelfControl chain to OUTPUT chain');
   }
 }
 sub new {
@@ -121,7 +121,7 @@ sub do_undo {
   # do /etc/hosts
   open my $hf, '>>', '/etc/hosts';
   unless ($hf) {
-    syslog('error','can not open /etc/hosts for writing');
+    syslog('err','can not open /etc/hosts for writing');
   }
   else {
     print $hf "$_\n" for @{$self->{hosts_do}};
@@ -132,12 +132,12 @@ sub do_undo {
   # do iptables
   for (@{$self->{iptables_do}}) {
     if (system($_)) {
-      syslog('error',"iptables failed: $_");
+      syslog('err',"iptables failed: $_");
       last;
     }
   }
   if (system('/etc/init.d/selfcontrol', 'stop')) {
-    syslog('error',"init.d save failed: $_");
+    syslog('err',"init.d save failed: $_");
   }
   $self->{iptables_do} = undef;
 
