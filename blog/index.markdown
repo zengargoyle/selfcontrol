@@ -1,6 +1,6 @@
 ---
-layout: default
-title: SelfControl
+layout: sub
+title: SelfControl Blog
 ---
 
 <h2>Latest Posts</h2>
