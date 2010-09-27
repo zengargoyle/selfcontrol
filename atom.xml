@@ -1,0 +1,27 @@
+---
+layout: nil
+---
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ 
+ <title>SelfControl</title>
+ <link href="http://zengargoyle.github.com/selfcontrol/atom.xml" rel="self"/>
+ <link href="http://zengargoyle.github.com/selfcontrol/"/>
+ <updated>{{ site.time | date_to_xmlschema }}</updated>
+ <id>http://zengargoyle.github.com/selfcontrol/</id>
+ <author>
+   <name>Dr Nic Williams</name>
+   <email>zengargoylewilliams@gmail.com</email>
+ </author>
+
+ {% for post in site.posts %}
+ <entry>
+   <title>{{ post.title }}</title>
+   <link href="http://zengargoyle.github.com/selfcontrol{{ post.url }}"/>
+   <updated>{{ post.date | date_to_xmlschema }}</updated>
+   <id>http://zengargoyle.github.com/selfcontrol{{ post.id }}</id>
+   <content type="html">{{ post.content | xml_escape }}</content>
+ </entry>
+ {% endfor %}
+ 
+</feed>
