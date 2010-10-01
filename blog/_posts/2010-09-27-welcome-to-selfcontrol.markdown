@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Welcome to SelfControl
+author: zengargoyle
 ---
 
 Well, it has been a busy weekend... I almost have this blog thing figured out, maybe in a few more days.  It has been *way* hot the past few days, breaking 108°F (uggh).
