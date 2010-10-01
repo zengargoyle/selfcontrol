@@ -48,7 +48,7 @@ and then do:
 
 Of course it's taken most of the weekend just pulling out my hair to figure out just a few more GUI tricks.  I figure it will be tons of code and work to get a good GUI around it.
 
-It also seems that SelfControl automagically appeard on Ubuntu Software Center! I swear I didn't do anything to cause that to happen.  Sadly it seems there's something amiss in my packages to make it not work that way.  Something about not finding the right architecture package.  (SelfControl has no architecture parts, it's all _all.deb)  Oh well.  It actually works when I set up a Personal Repository and add it to APT. :)
+It also seems that SelfControl automagically appeard on Ubuntu Software Center! I swear I didn't do anything to cause that to happen.  Sadly it seems there's something amiss in my packages to make it not work that way.  Something about not finding the right architecture package.  (SelfControl has no architecture parts, it's all `_all.deb`)  Oh well.  It actually works when I set up a Personal Repository and add it to APT. :)
 
 ----
 zengargoyle

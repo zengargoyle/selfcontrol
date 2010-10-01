@@ -23,7 +23,7 @@ metafilter.com and slashdot.org for 45 minutes.
 <div id="first_post">
   <h2>{{ first_post.title }}</h2>
   <div>
-    {{ first_post.content }}
+    {{ first_post.content | truncatewords:100 }}
   </div>
 </div>
 

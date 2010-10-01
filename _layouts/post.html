@@ -28,7 +28,8 @@
       </div>
       <div id="page_body">
         <div id="content">
-          <h1>{{ post.title }}</h1>
+          <h1>{{ page.title }}</h1>
+          <p>by {{ page.author }} {{ page.date | date_to_string }}</p>
           {{ content }}
         </div>
         <div id="sidebar">
