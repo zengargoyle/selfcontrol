@@ -79,7 +79,7 @@ sub run {
   if ($self->{started}) {
     save_config($self->{config_file}, $self->{config});
     if (scalar @{$self->{config}->{hosts}}) {
-      system(@{$self->{sudo}}, $0);
+      system(@{$self->{sudo}}, $0, $self->{config_file});
     }
   }
   bless $self, __PACKAGE__;

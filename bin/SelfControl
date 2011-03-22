@@ -26,7 +26,7 @@ openlog('SelfControl','pid','local0');
 my $UID = $<;
 $UID = $ENV{SUDO_UID} if exists $ENV{SUDO_UID};
 my $HOME = (getpwuid($UID))[7];
-my $ConfigFile = "$HOME/.selfcontrol";
+my $ConfigFile = $ARGV[0] || "$HOME/.selfcontrol";
 
 #
 # if root, apply Config and exit.
