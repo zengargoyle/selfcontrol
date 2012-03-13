@@ -266,7 +266,7 @@ sub build_ui {
 # HBox
   my $hbox;
   $hbox = Gtk2::HBox->new(FALSE, 0);
-  $vbox->pack_start($hbox, FALSE, TRUE, 0);
+  $vbox->pack_start($hbox, TRUE, TRUE, 0);
 
 # SimpleList
   my $list = Gtk2::SimpleList->new('Host'=>'text', 'IP'=>'text');
@@ -274,6 +274,21 @@ sub build_ui {
   $tt->set_tip($list, "Select hosts for deletion.");
   $list->set_data_array($self->{config}->{hosts});
   $list->get_selection->set_mode('multiple');
+
+  my @columns = $list->get_columns;
+  my $cnum = scalar(@columns);
+  my $c;
+  foreach $c (@columns) {
+	$c->set_resizable(TRUE);
+  }
+
+  my $rows = $self->{config}->{hosts};
+  my $rnum = scalar(@$rows);
+
+  if ($rnum > 10){ $rnum = 10; }
+  if ($rnum < 2){ $rnum = 2; }
+
+  $list->set_size_request (175 * $cnum, 28 * $rnum);
 
 # ScrolledWindow
   my $scroll = Gtk2::ScrolledWindow->new;
