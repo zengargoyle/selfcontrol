@@ -275,6 +275,9 @@ sub build_ui {
   $list->set_data_array($self->{config}->{hosts});
   $list->get_selection->set_mode('multiple');
 
+  # we need the following line otherwise the list is too small
+  $list->set_size_request(350,500);
+
   my @columns = $list->get_columns;
   my $cnum = scalar(@columns);
   my $c;
