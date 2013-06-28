@@ -97,36 +97,8 @@ sub add_chain {
   for my $hr (@{$self->{config}->{hosts}}) {
     push @{$self->{blocked}}, [@{$hr}];
     my $h = $hr->[1];
-    # TODO: test blocking with gethostbyname
-    # we were only adding a single IP previously looked up by
-    # the GUI phase.  Now re-doing the lookup in case the DNS has
-    # changed.  With a side benefit that we can actually add ALL
-    # IPs returned by gethostbyname.  (e.g.: google.com returns ~11
-    # different addresses)  This should also help the problem with
-    # Ubuntu et.al. using a possibly unhelpful dnsmasq configuration
-    # that ignores the /etc/hosts file.
-
-    use Socket qw(inet_ntoa AF_INET);
-
-    my @hostent = gethostbyname( $hr->[0] );
-    my @ips;
-
-    # if we got ipv4 addresses add them to our list
-    # gethostbyX => ($name,$aliases,$type,$len,@addrs)
-    if ($hostent[2] == AF_INET) {
-        @ips = map { inet_ntoa($_) } @hostent[4 .. $#hostent];
-    }
-    # use our original IP if the list is empty just in case
-    # we could add original if it's not already in the list but
-    # that could be adding an old IP that doesn't belong to the
-    # hostname anymore...  It's a tossup.
-    #push @ips, $hr->[1] unless grep { $hr->[1] eq $_ } @ips;
-    push @ips, $hr->[1] unless @ips;
-
-    for my $ip (@ips) {
-        push @{$self->{iptables_do}},   "iptables -I SelfControl -d $ip -j DROP";
-        push @{$self->{iptables_undo}}, "iptables -D SelfControl -d $ip -j DROP";
-    }
+    push @{$self->{iptables_do}},   "iptables -I SelfControl -d $h -j DROP";
+    push @{$self->{iptables_undo}}, "iptables -D SelfControl -d $h -j DROP";
   }
 }
 sub add_hosts {
