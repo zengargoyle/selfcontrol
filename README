@@ -1,3 +1,7 @@
+WARNING:  You probably shouldn't use this.  It was written back in
+the Ubuntu 11.04 days and is most likely broken for anything more
+recent.  It also uses ancient Gtk2.
+
 
 SelfControl for Linux
 
